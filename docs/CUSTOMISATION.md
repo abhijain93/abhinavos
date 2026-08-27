@@ -159,10 +159,12 @@ repository stays safe to be public.
 
 ## What you may not change
 
-One thing: the framework attribution — *"Built on AbhinavOS · Powered by
-Abhinav Jain"* — in the footer and the About panel. Everything else about the
-app's identity is yours. See [ATTRIBUTION.md](../ATTRIBUTION.md) for the
-reasoning and the honest limits of that request.
+One thing: the framework attribution — the small framework mark and the words
+*"Built on AbhinavOS · Powered by Abhinav Jain"* — in the footer and the About
+panel. It refers to the framework, never to your app, so renaming your app
+changes nothing about it. Everything else about the app's identity is yours.
+See [ATTRIBUTION.md](../ATTRIBUTION.md) for the reasoning and the honest
+limits of that request.
 
 ---
 
@@ -231,8 +233,11 @@ building before spending an hour on Airtable.
 Two guarantees, enforced in code rather than by UI convention:
 
 1. **Nothing is ever written.** Every Airtable call in this app passes through
-   one gateway function, and in demo mode that function refuses any non-GET
-   request outright. Verified by test.
+   one gateway function (`at()`), and in demo mode that function throws on any
+   non-GET request before a request is issued — the refusal is structural, not
+   a hidden button. There is no automated test suite in this repository; the
+   guarantee rests on there being exactly one gateway, which you can verify by
+   reading it.
 2. **Demo data never mixes with real data.** Demo mode uses a synthetic schema
    with fake table IDs that resolve to no real base, and it requires no token.
 

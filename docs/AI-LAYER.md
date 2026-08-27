@@ -104,10 +104,16 @@ tracked locally against plan caps.
 provider list, because that endpoint does not accept browser requests from an
 ordinary web origin — it only worked inside the Claude artifact sandbox where
 the earliest prototype of this app was built. On any real host it fails
-identically every time, so the app marks it down after the first failure and
-stops re-paying that round trip. The code is left in place because it documents
-where the project started, but a deployed instance uses the three providers
-above.
+identically every time.
+
+**It is disabled before it can run.** The flag that gates both entry points
+(`ANTHROPIC_DOWN`) is initialised to `true`, so meal parsing and coaching throw
+and fall through to the providers above *before* any `fetch` is issued. A
+deployed instance never contacts `api.anthropic.com` at all — not once, not on
+first use. Those calls also carry no API key, so they could not have succeeded
+anywhere outside the original sandbox. The code is left in place because it
+documents where the project started; it is not a live provider and must not be
+re-enabled.
 
 If every provider fails, meal parsing falls back to a **local parser that runs
 entirely in the page** — a food database plus a quantity/unit grammar

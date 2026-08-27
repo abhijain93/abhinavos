@@ -110,9 +110,11 @@ RULES FOR YOU THROUGHOUT:
 - NEVER put an API key, token, or credential into any file in the repository.
   Keys belong in the app's Settings screen, stored in my browser.
 - NEVER commit app/config.js. It's already in .gitignore — leave it there.
-- Do not remove the framework attribution ("Built on AbhinavOS · Powered by
-  Abhinav Jain") from the footer or the About panel. Everything else about the
-  app's identity is mine to change.
+- Do not remove the framework attribution — the framework mark image and the
+  words "Built on AbhinavOS · Powered by Abhinav Jain" — from the footer or the
+  About panel. That line names the framework, not my app, so renaming my app
+  never requires touching it. Everything else about the app's identity is mine
+  to change.
 - Do not make medical claims. This is a tracking tool, not a diagnostic one.
   If I ask you to set a target that seems unsafe, say so.
 - If I ask for something that would break the app, tell me instead of doing it.

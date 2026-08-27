@@ -469,17 +469,53 @@ standing brief; your live data is supplied separately on every call.
 
 ## 16. Running locally
 
+### First: you need a small web server, and that means installing something
+
+This app cannot be opened by double-clicking `index.html`. Browsers refuse to
+run a service worker — the piece that makes the app work offline — on a file
+opened straight from your disk. It has to be *served*, even when the server is
+just your own computer talking to itself.
+
+The command below, `npx serve .`, starts that tiny local server. `npx` is a
+command that comes with **Node.js**, a free program that lets your computer run
+JavaScript tools outside a browser. You are not writing any Node.js code and
+this app does not use Node.js to run — it's only the delivery mechanism for the
+one-line server.
+
+**If you don't already have Node.js, install it first:**
+[nodejs.org](https://nodejs.org) → download the **LTS** version → run the
+installer with the default options. Then close and reopen your terminal, and
+check it worked:
+
+```bash
+node --version
+```
+
+If that prints a version number (something like `v22.11.0`), you're set. If it
+says "command not found", the terminal was opened before the install finished —
+close it and open a new one.
+
+### Then run it
+
 ```bash
 cd abhinavos/app
 cp config.example.js config.js
 npx serve .
 ```
 
-Then open the URL it prints.
+The first time, `npx` will ask permission to download the `serve` package. Say
+yes. Then open the URL it prints (usually `http://localhost:3000`).
 
-**Opening `index.html` directly from disk will not work** — service workers need
-a real origin. Any static server does: `npx serve`, `python3 -m http.server`, or
-the Live Server extension in VS Code.
+**Don't want to install Node.js?** Two alternatives that need no extra install
+if you already have either:
+
+- **Python** (often pre-installed on macOS and Linux): `python3 -m http.server`
+  from inside the `app/` folder, then open `http://localhost:8000`.
+- **VS Code**: install the **Live Server** extension, right-click `index.html`,
+  choose *Open with Live Server*.
+
+Any of the three works. They all do the same job: serve the folder over
+`http://` instead of `file://`.
 
 On first load the app asks for your Airtable token. Paste it in. If your config
 is right, your day loads.
@@ -566,10 +602,11 @@ asked in return is that the framework credit stays visible:
 
 > Built on AbhinavOS · Powered by Abhinav Jain
 
-It appears as a small caricature mark plus **"Powered by Abhinav Jain"** in the
-footer, and again in the About/Credits panel. It's deliberately quiet, leads
-with the author rather than the framework name so your app reads as yours, and
-never carries a personal email address.
+It appears as a small caricature mark plus that line in the footer, and again
+in the About/Credits panel. It's deliberately quiet, names the framework and
+its author rather than your app, and never carries a personal email address.
+Your app name owns the header, the browser tab and the top of the About panel —
+rename it to anything and the credit line is unaffected.
 
 <img src="app/assets/framework-mark-128.png" width="72" alt="AbhinavOS framework mark">
 
@@ -602,7 +639,10 @@ The licence's **Notices** clause requires that anyone receiving a copy from you
 also receives the licence terms and the `Required Notice:` line naming the
 author. That's the legally meaningful part of the attribution.
 
-Want to use it commercially? Open an issue — the answer isn't automatically no.
+Want to use it commercially? Open an issue on
+[the repository](https://github.com/abhijain93/abhinavos/issues) — the answer
+isn't automatically no. Issues are the only contact route; there is no email
+address in this repository by design. See [ATTRIBUTION.md](ATTRIBUTION.md).
 
 *Not legal advice. If a licensing question matters to you materially, ask a
 lawyer.*

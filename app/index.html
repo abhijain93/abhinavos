@@ -1885,10 +1885,16 @@ function nextAction(){
 const MODEL="claude-sonnet-4-6";
 // api.anthropic.com only accepts requests from inside the Claude artifact
 // sandbox — on any other host (Netlify, a plain browser tab, etc.) every
-// call fails the same way every time. Once that happens once this session,
-// stop retrying it and go straight to the browser-callable providers —
-// there's no point re-paying that failed round trip on every single save.
-let ANTHROPIC_DOWN=false;
+// call fails the same way every time.
+//
+// DISABLED BY DEFAULT. This starts `true`, which means both entry points
+// (parseMealAI and coachCallAnthropic) throw before reaching fetch, so no
+// request to api.anthropic.com is ever issued by a deployed instance. The
+// code below is kept only because it documents where this project started;
+// the browser-callable providers (Gemini, Groq, OpenRouter) are what a real
+// deployment uses. Do not flip this to false — those calls carry no API key
+// and cannot succeed outside the original artifact sandbox.
+let ANTHROPIC_DOWN=true;
 const LEARN_KEY=SKEY("learned");
 let LEARNED={};
 let PARSE_SRC="";
@@ -4510,7 +4516,7 @@ function vAbout(){
     `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
        <img src="assets/framework-mark-128.png" alt="" class="fwmark-lg">
        <div><div style="font-weight:600">${esc(APP_NAME)}</div>
-       <div class="note">Powered by ${esc(FRAMEWORK_AUTHOR)}</div></div>
+       <div class="note">${esc(FRAMEWORK_CREDIT)}</div></div>
      </div>
      <div style="margin-bottom:10px">
       ${rows.map(([k,v])=>`<div class="aboutrow"><span class="note">${k}</span><span>${v}</span></div>`).join("")}
@@ -4529,12 +4535,14 @@ function vAbout(){
 
 function frameworkCredit(){
   /* The framework's attribution mark — the creator's caricature logo. It is
-     deliberately small and non-interactive. The wording stays "Powered by
-     <author>" rather than leading with the framework name, so a customised
-     app reads as the user's app first. See ATTRIBUTION.md. */
+     deliberately small and non-interactive: 10.5px, 60% opacity, in the
+     muted colour. The wording is FRAMEWORK_CREDIT — "Built on <framework> ·
+     Powered by <author>" — so that a customised app states plainly what it
+     is built on. The user's own app name owns the header and the About
+     panel; this line never competes with it. See ATTRIBUTION.md. */
   return '<div class="fwcredit">'
     + '<img src="assets/framework-mark-48.png" alt="" class="fwmark">'
-    + '<span>Powered by ' + FRAMEWORK_AUTHOR + '</span></div>';
+    + '<span>' + FRAMEWORK_CREDIT + '</span></div>';
 }
 const TABS=[["today",I_TODAY,"Today"],["food",I_FOOD,"Food"],["gym",I_GYM,"Gym"],["body",I_BODY,"Body"],["stats",I_STATS,"Stats"]];
 function R(){

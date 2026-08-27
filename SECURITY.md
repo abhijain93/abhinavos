@@ -67,9 +67,15 @@ immediately. Your data is not deleted, and nothing else needs to change.
 
 ## Reporting a vulnerability
 
-Open a GitHub issue for anything non-sensitive. For something that would expose
-data if described publicly, use GitHub's private vulnerability reporting on this
-repository instead.
+Open a [GitHub issue](https://github.com/abhijain93/abhinavos/issues) for
+anything non-sensitive. For something that would expose data if described
+publicly, use GitHub's private vulnerability reporting on this repository
+instead.
+
+GitHub is the only contact route for this project — for security reports,
+commercial-licensing questions and everything else. There is deliberately no
+email address in this repository or in the application UI, so that no forked
+app can display one. See [ATTRIBUTION.md](ATTRIBUTION.md).
 
 This is a personal project maintained by one person. Expect a considered
 response, not a fast one.

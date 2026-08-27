@@ -79,6 +79,15 @@ on your phone. Netlify, Vercel and Cloudflare Pages all do this free.
 **Localhost** — your app running on your own computer, visible only to you.
 Where you test before deploying.
 
+**Node.js** — a free program that lets your computer run JavaScript outside a
+browser. This app doesn't need it to *work*, but the one-line local web server
+in README section 16 is delivered through it. Install it from
+[nodejs.org](https://nodejs.org) (choose the LTS version) if you don't have it.
+
+**npx** — a command that comes with Node.js. It downloads and runs a tool once
+without permanently installing it. `npx serve .` means "fetch the `serve` tool
+and use it to serve this folder."
+
 **PWA (Progressive Web App)** — a website that installs to your phone's home
 screen and opens like a normal app, including offline. That's what this is —
 which is why there's no App Store version.

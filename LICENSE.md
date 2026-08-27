@@ -1,4 +1,4 @@
-Required Notice: Copyright Abhinav Jain — AbhinavOS framework (https://github.com/abhinavjain/abhinavos)
+Required Notice: Copyright Abhinav Jain — AbhinavOS framework (https://github.com/abhijain93/abhinavos)
 
 # PolyForm Noncommercial License 1.0.0
 

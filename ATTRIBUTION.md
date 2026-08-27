@@ -10,9 +10,16 @@ return is that the framework credit stays visible:
 
 > Built on AbhinavOS · Powered by Abhinav Jain
 
-It appears in two places: a small line in the footer, and the About/Credits
-panel on the Stats tab. It is deliberately quiet. It should never look like an
-advertisement inside your app.
+It appears in two places, in both cases next to the small framework mark: a
+line in the footer, and the About/Credits panel on the Stats tab. It is
+deliberately quiet — 10.5px, 60% opacity, in the muted colour. It should never
+look like an advertisement inside your app.
+
+Your app name is not part of that line and is never touched by it. The header,
+the browser tab and the top of the About panel all carry *your* name; the
+credit line sits underneath and says what the thing is built on. The framework
+is also named in `LICENSE.md`'s `Required Notice:` line, which is the part the
+licence actually obliges you to carry forward.
 
 ---
 
@@ -66,7 +73,8 @@ code. If you remove it, nothing breaks. Please don't.
 
 Attribution beyond the minimum is welcome but never required:
 
-- A line in your own README: *"Built from the [AbhinavOS](link) framework by
+- A line in your own README: *"Built from the
+  [AbhinavOS](https://github.com/abhijain93/abhinavos) framework by
   Abhinav Jain."*
 - A link back to this repository if you publish yours.
 - If you write about your version, mentioning where the architecture came from.
@@ -90,11 +98,16 @@ Claiming you designed the architecture is not.
 ## Commercial licensing
 
 If you want to use this commercially, the noncommercial licence doesn't cover
-it — but that doesn't mean the answer is no. Open an issue on the repository to
-start a conversation.
+it — but that doesn't mean the answer is no.
 
-Contact details are kept in the repository rather than in the application UI,
-so that nobody's forked app ends up displaying a personal email address.
+**How to get in touch:** open an issue on the framework repository —
+<https://github.com/abhijain93/abhinavos/issues>. Title it "Commercial
+licensing" and say what you want to build. That is the only contact route, and
+it is deliberate: there is no email address anywhere in this repository or in
+the application UI, so no forked app can ever end up displaying one, and
+`tools/secret-scan.sh` blocks any email address from being committed.
+
+Security issues go a different way — see [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -117,9 +130,11 @@ pixel-identical to the original. Nothing was redrawn, regenerated, or
 overlaid with text.
 
 **The mark carries no app name deliberately.** Your app is called whatever you
-call it; the mark identifies the framework's author, not the product. That's
-why the footer reads *"Powered by Abhinav Jain"* rather than leading with the
-framework name — your identity should be the primary one on screen.
+call it; the mark identifies the framework's author, not the product. The
+footer line beside it reads *"Built on AbhinavOS · Powered by Abhinav Jain"* —
+naming the framework and its author, never your app. Your identity stays the
+primary one on screen: it owns the header, the tab title and the About panel,
+and nothing in the credit line changes when you rename your app.
 
 **This is not your app's logo.** Set `branding.faceImage` (or use the Setup
 Wizard) to put your own avatar, caricature, photo or logo in the header. The
