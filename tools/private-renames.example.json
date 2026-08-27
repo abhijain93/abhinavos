@@ -1,0 +1,19 @@
+[
+ [ "// Copy this file to private-renames.json and edit it.", "", "" ],
+ [ "// private-renames.json is gitignored and must never be committed:", "", "" ],
+ [ "// a published map of 'condition X -> neutral word Y' is a decoder ring", "", "" ],
+ [ "// that undoes the very neutralisation it performs.", "", "" ],
+ [ "//", "", "" ],
+ [ "// Format: [regex source, regex flags, replacement]", "", "" ],
+ [ "// Order matters. Put specific rules BEFORE the generic ones that", "", "" ],
+ [ "// would otherwise consume them.", "", "" ],
+ [ "//", "", "" ],
+ [ "// Delete these comment entries and add your own, e.g.:", "", "" ],
+
+ [ "\\bsomeConditionUsed\\b",  "g", "therapyUsed" ],
+ [ "\\bsomeConditionHours\\b", "g", "therapyHours" ],
+ [ "\\bf_somecondition\\b",    "g", "f_therapy" ],
+ [ "Some Condition hours",     "g", "Therapy hours" ],
+ [ "\\bSOMECONDITION\\b",      "g", "OVERNIGHT MEASURE" ],
+ [ "\\bsomeCondition\\b",      "g", "trackedMeasure" ]
+]

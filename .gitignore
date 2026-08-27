@@ -1,0 +1,72 @@
+# ---------------------------------------------------------------------------
+# NEVER COMMIT THESE. This is the file standing between a public repo and a
+# private Airtable base. Do not remove lines from it.
+# ---------------------------------------------------------------------------
+
+# Your own scanner patterns — your employer, medication, biometrics, etc.
+# NEVER COMMIT. The .example file is the public, placeholder-only version.
+tools/private-patterns.txt
+**/private-patterns.txt
+!tools/private-patterns.example.txt
+
+# The vocabulary rename map. A published "condition X -> word Y" list is a
+# decoder ring that undoes the neutralisation. NEVER COMMIT.
+tools/private-renames.json
+**/private-renames.json
+!tools/private-renames.example.json
+
+# Local configuration — base ID, field IDs, personal targets, coach prompt.
+app/config.js
+config.js
+**/config.local.js
+
+# The private, un-sanitised build. Keep it outside the repo if you can;
+# this is the belt-and-braces in case you don't.
+private/
+*.private.html
+index.private.html
+abhinavos-deploy.zip
+*-deploy.zip
+
+# Data exports of any kind.
+*.csv
+*.xlsx
+*.json.bak
+export/
+exports/
+backup/
+backups/
+apple-health-export*
+*.gpx
+
+# Personal imagery. Your own avatar/logo files stay local unless you
+# deliberately commit them to YOUR fork (which is fine — they're yours).
+# NOTE: app/assets/framework-mark-*.png ARE tracked — they are the framework
+# attribution mark, not personal branding. Your own images go elsewhere:
+app/assets/my-*
+app/assets/avatar*
+avatar.*
+boot.*
+face.*
+progress-photos/
+
+# Secrets by convention.
+.env
+.env.*
+*.key
+*.pem
+secrets*
+credentials*
+
+# OS and editor noise.
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# Tooling.
+node_modules/
+.cache/

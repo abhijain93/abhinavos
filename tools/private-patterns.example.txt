@@ -1,0 +1,54 @@
+# private-patterns.example.txt
+#
+# Copy this to `private-patterns.txt` and fill in YOUR OWN details.
+# `private-patterns.txt` is gitignored and must never be committed.
+#
+# WHY THIS EXISTS
+# ---------------
+# The published scanner (secret-scan.sh) checks for *categories* of personal
+# data — employer names, locations, medication names, biometrics. Categories
+# catch a lot, but they can't catch the specific string that matters to you.
+#
+# Listing your own terms here makes detection exact. And because this file
+# never leaves your machine, the scanner itself doesn't become a document
+# describing you — which is a mistake worth avoiding: a privacy tool whose
+# source code lists your employer, your medication and your height has
+# leaked the very thing it was written to protect.
+#
+# FORMAT
+# ------
+#   LABEL|REGEX
+#
+# One per line. Lines starting with # are ignored. The regex is passed
+# straight to `grep -E`, so escape special characters accordingly.
+# Use | inside the regex for alternatives — only the FIRST | on the line
+# separates the label from the pattern.
+#
+# The scanner works fine without this file. It's an upgrade, not a
+# requirement.
+
+# --- who you are -----------------------------------------------------------
+Employer name|AcmeCorp|Acme Corporation
+Employer industry|widget manufacturing|widget services
+Job title and locations|Senior Widget Engineer at |Springfield|Shelbyville
+Personal contact details|myemail|5551234567
+
+# --- your data -------------------------------------------------------------
+Private database name|My Personal Base Name Here
+
+# --- your health -----------------------------------------------------------
+# Conditions, symptoms and medications you don't want in a public repository.
+Clinical history|some-condition|another-condition
+Symptoms in UI copy|some-symptom|another-symptom
+Medication and supplement brands|BrandA|BrandB|BrandC
+
+# --- your numbers ----------------------------------------------------------
+# Bare numbers passed positionally into calculations are the hardest kind to
+# spot by eye, and no generic key-pattern catches them. Pin yours exactly.
+Personal biometric prior|computeTDEE\([^)]*180, *25, *(true|false)
+Seed lifting weights|Some Exercise":42
+
+# --- anything else ---------------------------------------------------------
+# Brand names from your kitchen, a nickname, a street, an old username —
+# anything you'd rather a stranger reading your repository didn't learn.
+Personal brands|SomeLocalBrand|AnotherBrand
