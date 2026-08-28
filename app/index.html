@@ -3314,6 +3314,274 @@ function vWizard(){
   </div>`;
 }
 
+/* ============ FIELD-ID AUTO-DISCOVERY (optional, onboarding only) ============
+   Eliminates manual field-ID transcription for users who copied the official
+   AbhinavOS Health Template. Read-only: one GET to Airtable's metadata
+   endpoint — same host, same Bearer-token auth, same schema.bases:read scope
+   this app's token setup already asks for below. CORS-reachability confirmed
+   manually before this was built (same model as the record endpoints this
+   app already calls from the browser).
+
+   Matches by exact table/field NAME (case-insensitive), then checks the
+   Airtable field TYPE before accepting a match — never fuzzy, never picks
+   between duplicates. Output is a config.js-shaped `schema: {...}` text
+   block the user copies into their OWN config.js: this function never
+   writes anything, to Airtable or to this app's own storage, and does not
+   change how config.js or SCHEMA are read (see loadSchema() above) — the
+   manual path is completely untouched. The five fields the app already
+   looks up by literal Airtable name (filterByFormula strings, not a
+   config-supplied ID) are checked for presence only, never remapped. */
+
+// The official template's table + field display names and the Airtable
+// field type each must resolve to. Not derivable from config.example.js's
+// short internal keys (e.g. "p" gives no way to guess "Total protein g"),
+// so a small explicit map is unavoidable — kept flat (name + type only, no
+// descriptions/options/IDs) to stay the minimum needed to match safely,
+// not a second schema definition. Grouped under the same key names
+// config.example.js already uses.
+const TEMPLATE_MAP = {
+  daily: {name:"Daily Log", fields:{
+    date:["Date","date"], datekey:["Date key","formula"], weight:["Weight kg","number"],
+    official:["Official Weigh-in","checkbox"], sleep:["Sleep Total h","number"],
+    deep:["Deep min","number"], rem:["REM min","number"], awake:["Awake min","number"],
+    onset:["Sleep Onset Latency min","number"], grog:["Morning Grogginess","rating"],
+    water:["Water L","number"], steps:["Steps","number"], mode:["Mode","singleSelect"],
+    gymDone:["Gym Done","checkbox"], skinAM:["Skincare AM","multipleSelects"],
+    skinPM:["Skincare PM","multipleSelects"], suppAM:["Supplements AM","multipleSelects"],
+    suppPM:["Supplements PM","multipleSelects"], eveningCutoff:["Evening Cutoff Held","checkbox"],
+    habitCount:["Tracked Habit Count","number"], nasal:["Nasal Dilator Used","checkbox"],
+    left:["Left-Side Sleeping","checkbox"], bloat:["Bloating","singleSelect"],
+    energy:["Energy","singleSelect"], stress:["Stress","singleSelect"], alcohol:["Alcohol","checkbox"],
+    notes:["Notes","multilineText"], foodLink:["Food Log","multipleRecordLinks"],
+    kcal:["Total kcal","rollup#num"], p:["Total protein g","rollup#num"], c:["Total carbs g","rollup#num"],
+    f:["Total fat g","rollup#num"], na:["Total sodium mg","rollup#num"], grain:["Grains today","rollup#num"],
+    spo2:["SpO2 Min %","number"], spo2Dips:["SpO2 Dips Below 90","number"], hrv:["HRV ms","number"],
+    restingHR:["Resting HR","number"], stoolForm:["Stool Form","singleSelect"], bmCount:["Bowel Movements","number"],
+    emaWeight:["Weight Trend EMA","number"], tdee:["TDEE Estimate","number"], photos:["Progress Photos","multipleAttachments"],
+    therapyUsed:["Therapy Used","checkbox"], therapyHours:["Therapy Hours","number"], deviceIndex:["Device Index","number"]
+  }},
+  food: {name:"Food Log", fields:{
+    date:["Date","date"], meal:["Meal","singleSelect"], qty:["Qty","number"], item:["Item","singleLineText"],
+    notes:["Notes","singleLineText"], day:["Day","multipleRecordLinks"], raw:["Raw text","multilineText"],
+    kcal:["kcal","number"], p:["Protein g","number"], c:["Carbs g","number"], f:["Fat g","number"],
+    fib:["Fiber g","number"], na:["Sodium mg","number"], ca:["Calcium mg","number"], grain:["Grain count","number"],
+    tol:["Tolerance","singleSelect"], note:["AI note","multilineText"]
+  }},
+  gym: {name:"Gym Sessions", fields:{
+    date:["Date","date"], split:["Split","singleSelect"], dur:["Duration min","number"],
+    core:["Core Finisher","checkbox"], cardio:["Cardio min","number"], rpe:["Session RPE","rating"],
+    notes:["Notes","multilineText"]
+  }},
+  lift: {name:"Lift Log", fields:{
+    date:["Date","date"], ex:["Exercise Name","singleLineText"], w:["Weight kg","number"],
+    sets:["Sets","number"], reps:["Reps","number"], side:["Side","singleSelect"], notes:["Notes","singleLineText"]
+  }},
+  exl: {name:"Exercise Library", fields:{
+    name:["Exercise","singleLineText"], group:["Muscle Group","singleSelect"], type:["Type","singleSelect"],
+    repMin:["Rep Min","number"], repMax:["Rep Max","number"], cur:["Current Weight kg","number"],
+    uni:["Unilateral","checkbox"], notes:["Notes","singleLineText"]
+  }},
+  act: {name:"Medical Actions", fields:{
+    action:["Action","singleLineText"], priority:["Priority","singleSelect"], category:["Category","singleSelect"],
+    opened:["Opened","date"], status:["Status","singleSelect"], done:["Completed","date"], notes:["Notes","multilineText"]
+  }},
+  supp: {name:"Supplements", fields:{
+    name:["Supplement","singleLineText"], dose:["Dose","singleLineText"], timing:["Timing","singleSelect"],
+    status:["Status","singleSelect"], purpose:["Purpose","singleLineText"], notes:["Notes","singleLineText"],
+    units:["Units Remaining","number"], dailyDose:["Daily Dose Units","number"],
+    threshold:["Reorder Threshold Days","number"], daysLeft:["Days Left","formula"], flag:["Reorder Flag","formula"],
+    link:["Purchase Link","url"], restocked:["Last Restocked","date"], recheckDue:["Recheck Due","date"]
+  }},
+  score: {name:"Score Rules", fields:{
+    behaviour:["Behaviour","singleLineText"], points:["Points","number"], direction:["Direction","singleSelect"],
+    category:["Category","singleSelect"], active:["Active","checkbox"], conf:["Source Confidence","singleSelect"],
+    suspend:["Suspended in Restart Mode","checkbox"], notes:["Notes","multilineText"]
+  }},
+  muscleVol: {name:"Muscle Volume Weekly", fields:{
+    week:["Week","date"], group:["Muscle Group","singleSelect"], sets:["Working Sets","number"], sessions:["Sessions","number"]
+  }},
+  lp: {name:"Lab Panels", fields:{
+    date:["Panel Date","date"], lab:["Lab Name","singleLineText"], fasting:["Fasting","checkbox"], context:["Context","multilineText"]
+  }},
+  lr: {name:"Lab Results", fields:{
+    marker:["Marker","singleLineText"], date:["Panel Date","date"], value:["Value","number"], unit:["Unit","singleLineText"],
+    refLow:["Ref Low","number"], refHigh:["Ref High","number"], status:["Status","singleSelect"],
+    category:["Category","singleSelect"], notes:["Notes","singleLineText"]
+  }}
+  // fl (Food Library) and dscore (Daily Score) intentionally excluded: not
+  // part of the official template, and inert in the current app — no code
+  // path reads or writes either (see docs/DATA-MODEL.md).
+};
+
+// The five fields the app looks up by literal Airtable field NAME rather
+// than a config-supplied ID. Presence is checked, never remapped.
+const LITERAL_NAME_FIELDS = [
+  {table:"daily", names:["Date","Date key"]},
+  {table:"food", names:["Date"]},
+  {table:"muscleVol", names:["Week","Muscle Group"]}
+];
+
+function typeMatches(expected, actual){
+  if(expected==="rollup#num") return actual==="rollup"||actual==="formula"||actual==="number";
+  return expected===actual;
+}
+
+async function discoverTemplateSchema(baseId, token){
+  const res = await fetch(AT+"meta/bases/"+encodeURIComponent(baseId)+"/tables", {
+    headers:{"Authorization":"Bearer "+token}
+  });
+  if(!res.ok){
+    const body = await res.text().catch(()=>"");
+    throw new Error("Airtable rejected the request ("+res.status+"). "+body.slice(0,200));
+  }
+  const json = await res.json();
+  const airtableTables = json.tables||[];
+  const result = {tables:{}, literalWarnings:[]};
+
+  Object.keys(TEMPLATE_MAP).forEach(key=>{
+    const spec = TEMPLATE_MAP[key];
+    const matches = airtableTables.filter(t=>t.name.toLowerCase()===spec.name.toLowerCase());
+    if(matches.length===0){ result.tables[key]={status:"missing", name:spec.name}; return; }
+    if(matches.length>1){ result.tables[key]={status:"ambiguous", name:spec.name}; return; }
+    const table = matches[0];
+    const fields = {};
+    Object.keys(spec.fields).forEach(fk=>{
+      const wantName=spec.fields[fk][0], wantType=spec.fields[fk][1];
+      const fmatches = table.fields.filter(f=>f.name.toLowerCase()===wantName.toLowerCase());
+      if(fmatches.length===0){ fields[fk]={status:"missing", name:wantName, wantType:wantType, options:table.fields}; return; }
+      if(fmatches.length>1){ fields[fk]={status:"ambiguous", name:wantName, wantType:wantType, options:fmatches}; return; }
+      const f=fmatches[0];
+      if(!typeMatches(wantType,f.type)){ fields[fk]={status:"wrongType", name:wantName, wantType:wantType, foundType:f.type, options:table.fields}; return; }
+      fields[fk]={status:"matched", id:f.id, name:f.name};
+    });
+    result.tables[key]={status:"found", id:table.id, name:table.name, fields};
+  });
+
+  LITERAL_NAME_FIELDS.forEach(spec=>{
+    const t = result.tables[spec.table];
+    if(!t || t.status!=="found") return;
+    const airtableTable = airtableTables.find(x=>x.id===t.id);
+    spec.names.forEach(nm=>{
+      const present = airtableTable.fields.some(f=>f.name===nm); // case-sensitive: formulas reference the exact literal
+      if(!present) result.literalWarnings.push(spec.table+"."+nm);
+    });
+  });
+
+  return result;
+}
+
+/* Turns a discovery result (plus any manual picks for unresolved fields)
+   into a config.js-shaped `schema: {...}` text block. This is the only
+   output — nothing is written anywhere by this function. */
+function schemaBlockFromDiscovery(result, overrides){
+  overrides = overrides||{};
+  const groupKey = {daily:"D",food:"F",gym:"G",lift:"L",exl:"E",act:"A",supp:"SUP",score:"SCORE",muscleVol:"MV",lp:"LP",lr:"LR"};
+  const lines=["  schema: {"];
+  Object.keys(TEMPLATE_MAP).forEach(key=>{
+    const t = result.tables[key];
+    if(!t || t.status!=="found") return;
+    lines.push("    "+key+": { id: \""+t.id+"\" },");
+  });
+  Object.keys(TEMPLATE_MAP).forEach(key=>{
+    const t = result.tables[key];
+    if(!t || t.status!=="found") return;
+    const entries=[];
+    Object.keys(t.fields).forEach(fk=>{
+      const chosen = (overrides[key]&&overrides[key][fk]!==undefined) ? overrides[key][fk]
+                     : (t.fields[fk].status==="matched"?t.fields[fk].id:null);
+      if(chosen) entries.push(fk+": \""+chosen+"\"");
+    });
+    if(entries.length) lines.push("    "+groupKey[key]+": { "+entries.join(", ")+" },");
+  });
+  lines.push("  },");
+  return lines.join("\n");
+}
+
+let DISCOVERY_RESULT=null, DISCOVERY_OVERRIDES={}, DISCOVERY_BUSY=false, DISCOVERY_ERROR=null;
+
+async function runDiscovery(){
+  const baseEl=document.getElementById("disc_base");
+  const tokEl=document.getElementById("tok");
+  const baseId=(baseEl&&baseEl.value||BASE||"").trim();
+  const token=(tokEl&&tokEl.value||"").trim();
+  if(!baseId||!token){ toast("Enter your base ID and token first",true); return; }
+  TOKEN=token; // keep in memory (not persisted) so the field survives the re-render below
+  DISCOVERY_BUSY=true; DISCOVERY_ERROR=null; DISCOVERY_RESULT=null; R();
+  try{
+    DISCOVERY_RESULT = await discoverTemplateSchema(baseId, token);
+    DISCOVERY_OVERRIDES={};
+  }catch(e){
+    DISCOVERY_ERROR = (e&&e.message)||String(e);
+  }
+  DISCOVERY_BUSY=false; R();
+}
+function discoveryPickField(tableKey, fieldKey, fieldId){
+  DISCOVERY_OVERRIDES[tableKey]=DISCOVERY_OVERRIDES[tableKey]||{};
+  DISCOVERY_OVERRIDES[tableKey][fieldKey]=fieldId||null;
+  R();
+}
+function copyDiscoveredSchema(){
+  const block = schemaBlockFromDiscovery(DISCOVERY_RESULT, DISCOVERY_OVERRIDES);
+  try{ navigator.clipboard.writeText(block); toast("Copied — paste into your config.js"); }
+  catch(e){ toast("Could not copy — select the text below manually",true); }
+}
+function vDiscoveryPanel(){
+  if(!DISCOVERY_RESULT && !DISCOVERY_ERROR && !DISCOVERY_BUSY){
+    return `<div style="margin-top:16px;text-align:left">
+      <div class="note" style="margin-bottom:6px"><b>Copied the official template?</b> Skip typing ~50 field IDs by hand.</div>
+      <input id="disc_base" placeholder="Your Airtable base ID (appXXXXXXXXXXXXXX)" value="${esc(BASE||"")}">
+      <button class="btn full" style="margin-top:8px" onclick="runDiscovery()">Auto-detect my tables</button>
+      <div class="note" style="margin-top:6px">Only works for a base copied from the official AbhinavOS Health Template — one read-only request, using the token above. Nothing is written to Airtable. Not this? Just fill in config.js by hand as usual.</div>
+    </div>`;
+  }
+  if(DISCOVERY_BUSY) return `<div class="note" style="margin-top:16px">Checking your base…</div>`;
+  if(DISCOVERY_ERROR) return `<div class="err" style="margin-top:16px">${esc(DISCOVERY_ERROR)}</div>
+    <button class="btn" style="margin-top:6px" onclick="DISCOVERY_ERROR=null;R()">Try again</button>`;
+
+  const r=DISCOVERY_RESULT;
+  let rows="", matchedCount=0, totalCount=0, unresolvedCount=0;
+  Object.keys(TEMPLATE_MAP).forEach(key=>{
+    const t=r.tables[key];
+    if(!t) return;
+    if(t.status!=="found"){
+      rows+=`<div class="note" style="color:var(--attention)">Table "${esc(t.name)}" not found — this table's fields will be left blank.</div>`;
+      return;
+    }
+    Object.keys(t.fields).forEach(fk=>{
+      totalCount++;
+      const f=t.fields[fk];
+      if(f.status==="matched"){ matchedCount++; return; }
+      unresolvedCount++;
+      // Only offer candidates whose Airtable type satisfies this key's expected
+      // type — the same typeMatches() rule the automatic pass already applies.
+      // A non-technical user should never be able to pick a field that can't work.
+      const options=(f.options||[]).filter(o=>typeMatches(f.wantType,o.type))
+        .map(o=>`<option value="${esc(o.id)}">${esc(o.name)} (${esc(o.type)})</option>`).join("");
+      const why=f.status==="missing"?"not found":f.status==="ambiguous"?"multiple fields share this name":"wrong type ("+esc(f.foundType)+")";
+      rows+=`<div style="margin-top:8px">
+        <div class="note">${esc(t.name)} → <b>${esc(fk)}</b> — expected "${esc(f.name)}", ${why}</div>
+        <select onchange="discoveryPickField('${key}','${fk}',this.value)">
+          <option value="">Skip this field</option>${options}
+        </select>
+      </div>`;
+    });
+  });
+  if(r.literalWarnings.length){
+    rows += `<div class="note" style="margin-top:10px;color:var(--attention)">
+      Heads up: ${r.literalWarnings.map(esc).join(", ")} — the app looks these up by their exact name,
+      not by ID. If you renamed them, restore the original name or the app won't find today's row.</div>`;
+  }
+
+  return `<div style="margin-top:16px;text-align:left">
+    <div class="note"><b>${matchedCount} of ${totalCount} fields matched automatically.</b>
+      ${unresolvedCount?unresolvedCount+" need your input below.":"Nothing left to resolve."}</div>
+    ${rows}
+    <button class="btn p full" style="margin-top:10px" onclick="copyDiscoveredSchema()">Copy schema for config.js</button>
+    <div class="note" style="margin-top:6px">Paste this over the <span class="mono">schema: {...}</span> block in your own <span class="mono">config.js</span>. This doesn't change how config.js works — it just fills it in for you.</div>
+    <button class="btn" style="margin-top:6px" onclick="DISCOVERY_RESULT=null;DISCOVERY_OVERRIDES={};R()">Start over</button>
+  </div>`;
+}
+
 function vSetup(){
   return `<div class="card" style="text-align:center">
    <img src="${CHAR_URI}" alt="" style="width:150px;height:auto;margin:2px auto 14px;display:block;filter:drop-shadow(0 14px 30px rgba(0,0,0,.6))">
@@ -3329,10 +3597,12 @@ function vSetup(){
     4. Access — add the base you built for <b>${esc(APP_NAME)}</b><br>
     5. Create, copy, paste below
    </div>
-   <input id="tok" placeholder="pat..." style="margin-top:13px" autocomplete="off">
+   <input id="tok" placeholder="pat..." style="margin-top:13px" autocomplete="off" value="${esc(TOKEN||"")}" oninput="TOKEN=this.value">
    <button class="btn p full" style="margin-top:10px" onclick="submitToken()">Connect</button>
    ${lastError?`<div class="err">${esc(lastError)}</div>`:""}
-   <div class="note" style="margin-top:11px">The token is stored only for this app and is sent nowhere except Airtable.</div></div>`;
+   <div class="note" style="margin-top:11px">The token is stored only for this app and is sent nowhere except Airtable.</div>
+   ${vDiscoveryPanel()}
+   </div>`;
 }
 
 function vToday(){
