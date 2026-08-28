@@ -1,7 +1,9 @@
 # Data model
 
-Thirteen linked Airtable tables. This document describes what each holds and
-which fields the app reads. It is enough to rebuild the base from scratch.
+Thirteen tables are defined in the schema/configuration. The starter template
+contains the 11 tables currently used by the application. This document
+describes what each holds and which fields the app reads. It is enough to
+rebuild the base from scratch.
 
 **Faster than building from scratch: copy the starter template.** A public,
 read-only Airtable base — [AbhinavOS Health
@@ -91,11 +93,15 @@ trigger-hypothesis view and by the coach's gate.
 There is no dedicated sugar or legume field. Sugar is folded into the note text;
 legume detection is done by item name.
 
-### `Food Library` — verified foods
+### `Food Library` — verified foods (defined, not currently used)
 
-Your confirmed items with known per-unit macro values. Checked *before* any AI
-call, which is what keeps repeat meals consistent and keeps the model out of the
-loop for most logging.
+A table for confirmed items with known per-unit macro values — intended as a
+manually maintained cache that a future version of the app could check before
+an AI call, to keep repeat meals consistent and reduce model calls. The current
+application code has no call site for this table: every meal description goes
+to the AI provider (or the local-parser fallback) regardless of what's in this
+table. It's included in the schema for anyone who wants to maintain the data by
+hand, or to build that lookup themselves.
 
 ---
 

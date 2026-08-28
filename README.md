@@ -128,10 +128,9 @@ The longer version, including the bugs: [docs/LESSONS.md](docs/LESSONS.md).
 closes, exactly one prioritised action, and macro rings that fill *toward a
 floor rather than up to a cap*, because under-eating was the actual failure mode.
 
-**Food** — describe a meal in plain language. It matches your verified food
-library first, and only asks the model to estimate what the library doesn't
-know. Everything the AI produces lands in an editable form. Nothing is written
-until you confirm it.
+**Food** — describe a meal in plain language and the model estimates
+per-item macros. Everything the AI produces lands in an editable form. Nothing
+is written until you confirm it.
 
 **Gym** — session-aware logging that updates today's session rather than
 duplicating it, voice input parsed deterministically into structured sets, and
@@ -186,7 +185,7 @@ Four layers, no server.
                           ↓
 ┌─────────────────────────────────────────────────────────┐
 │  DATA — Airtable as the database                        │
-│  13 linked tables. REST API with bearer auth, plus an   │
+│  11 linked tables. REST API with bearer auth, plus an   │
 │  offline write queue that retries failed syncs.         │
 └─────────────────────────────────────────────────────────┘
                           ↓
@@ -222,8 +221,7 @@ percentage is computed in JavaScript, traceably.
 
 **What the model does:**
 1. **Turns a sentence into structured data.** "2 rotis, dal, half bowl sabzi"
-   becomes a JSON array with per-item macros. Your verified food library is
-   checked first, so known foods never reach the model.
+   becomes a JSON array with per-item macros.
 2. **Coaching.** A note fires after logging — but only when a *deterministic
    gate* has already decided there's something worth saying. Code asks the
    question; the model writes the sentence.
@@ -242,13 +240,14 @@ browser. Full detail: [docs/AI-LAYER.md](docs/AI-LAYER.md).
 
 ## 8. Data architecture
 
-Thirteen linked Airtable tables. **Each user has their own base, their own
+Eleven linked Airtable tables. **Each user has their own base, their own
 account, their own records.** No data from this repository's author is included,
 and there's no shared instance — your browser talks straight to your base.
 
 Field addressing is by field ID, not field name, so renaming a column in
-Airtable never breaks the app — with four narrow exceptions that are looked up
-by name; see [docs/DATA-MODEL.md](docs/DATA-MODEL.md) for exactly which ones.
+Airtable never breaks the app — with five field names, across three lookup
+contexts, that are looked up by name instead; see
+[docs/DATA-MODEL.md](docs/DATA-MODEL.md) for exactly which ones.
 
 The write queue is the piece worth pointing at: failure *classification* matters
 more than retry logic. Network failures and rate limits queue and retry.
