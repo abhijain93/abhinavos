@@ -3,11 +3,37 @@
 Thirteen linked Airtable tables. This document describes what each holds and
 which fields the app reads. It is enough to rebuild the base from scratch.
 
+**Faster than building from scratch: copy the starter template.** A public,
+read-only Airtable base — [AbhinavOS Health
+Template](https://airtable.com/apprHhK8MYc51ERpa/shr52rwUsM4sXMZgO) — has the
+tables, fields, select options and the 14 `Score Rules` rows already set up,
+matching this document and the app's code exactly. Open the link, use
+Airtable's **Copy base** to get your own editable copy, then skip straight to
+getting your IDs (below). The template covers 11 of the 13 tables — see
+**Why the template has 11 tables, not 13** below for the two it leaves out and
+why that's safe to start without.
+
 **Field IDs, not field names.** The app addresses Airtable by field ID. Renaming
 a column in the Airtable UI never breaks anything. The cost is that every ID has
 to be declared once, in `app/config.js` — see
 [`app/config.example.js`](../app/config.example.js) for the shape and the full
 key list.
+
+**Five field names read by name, not by ID, across three lookup contexts.** A
+handful of lookups use Airtable's `filterByFormula`, which has to reference a
+column by name. These five field names are the only ones in the whole app you
+cannot freely rename in Airtable:
+
+| Lookup context | Table | Field(s) | Why |
+|---|---|---|---|
+| Finding "today's" row | `Daily Log` | `Date`, `Date key` (falls back to `Date` if `Date key` isn't configured) | Two possible field names, one lookup |
+| Filtering a day's food entries | `Food Log` | `Date` | One field name, one lookup |
+| Finding/updating this week's rollup row per group | `Muscle Volume Weekly` | `Week`, `Muscle Group` | Two field names together identify one row, one lookup |
+
+If you rename any of these five column names in Airtable, the corresponding
+lookup silently returns nothing rather than erroring — the same "config as
+data, and configuration mistakes fail quietly" trade-off described for `Score
+Rules` below.
 
 **Everything except `Daily Log.date` is optional.** Leave a key out of your
 config and the card that depends on it hides itself. There is no crash path for
@@ -140,6 +166,20 @@ app's behaviour with no code change and no redeploy.
 `direction` is positive or negative. `suspend` marks rules that pause during
 restart mode. `active` lets you retire a rule without losing its history.
 
+**The `behaviour` text is a contract with the code, not a label.** The scoring
+engine looks up each rule by matching `behaviour` against a fixed string the
+code expects (case-insensitive, but otherwise exact). If a row's `behaviour`
+text doesn't match one of those expected strings precisely, that rule is
+silently never applied — no error, no missing-data warning, the points just
+never get added. The starter template's 14 rows use the exact strings the code
+expects, including `Tracked habit (per unit)` for the generic per-unit habit
+rule (an app you build from scratch might instead label this row for a specific
+habit, e.g. `Cigarette (per unit)` — that's fine for your own use, but it means
+your habit tracker's per-unit entries won't score unless you either use the
+code's expected text or add a matching lookup in code). If you add a new
+`Score Rules` row for a behaviour the code doesn't already know about, it will
+sit in the table quietly doing nothing until code is added to look it up.
+
 ### `Daily Score` — one computed row per day
 
 `date`, `earned`, `lostRaw`, `logged`, `gap`, `restart`, `restartGoal`,
@@ -166,3 +206,26 @@ A target you can't reconstruct is a target you can't learn from.
 `legume` fields from the start rather than inferring both. Inference from item
 names works until you log something the pattern doesn't match, and then it fails
 silently — which is the worst way for a data pipeline to fail.
+
+---
+
+## Why the template has 11 tables, not 13
+
+`app/config.example.js` still declares keys for all thirteen tables (`fl` for
+`Food Library`, `dscore` for `Daily Score`). Both are defined in the
+schema/configuration, but neither is currently read or written anywhere in the
+application code — there is no call site for either table in `app/index.html`.
+The starter template linked above omits exactly those two:
+
+- **`Food Library`** is described elsewhere in this document as a cache of
+  verified foods, but the current code never queries it and never checks it
+  before an AI or local-parser meal-parsing call. Configuring `fl` today has no
+  effect on app behaviour.
+- **`Daily Score`** is described elsewhere in this document as a computed
+  output table, but the current code never writes to it and never reads from
+  it. Configuring `dscore` today has no effect on app behaviour.
+
+Both are safe to leave unconfigured — omitting them from your base changes
+nothing about how the app runs today. The template leaves them out only to keep
+the first base you build
+smaller and faster to set up.

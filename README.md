@@ -247,7 +247,8 @@ account, their own records.** No data from this repository's author is included,
 and there's no shared instance — your browser talks straight to your base.
 
 Field addressing is by field ID, not field name, so renaming a column in
-Airtable never breaks the app.
+Airtable never breaks the app — with four narrow exceptions that are looked up
+by name; see [docs/DATA-MODEL.md](docs/DATA-MODEL.md) for exactly which ones.
 
 The write queue is the piece worth pointing at: failure *classification* matters
 more than retry logic. Network failures and rate limits queue and retry.
@@ -320,9 +321,16 @@ instruction is to *explain* the architecture, not modify it. Resist the urge to
 skip this — understanding the shape of the thing makes every later step faster.
 
 ### Step 5 — Create your own Airtable base
-[airtable.com](https://airtable.com) → new base. Build the 13 tables from
-[docs/DATA-MODEL.md](docs/DATA-MODEL.md). This is the longest step. Claude can
-walk you through it one table at a time.
+Fastest path: copy the [AbhinavOS Health
+Template](https://airtable.com/apprHhK8MYc51ERpa/shr52rwUsM4sXMZgO) — a
+public, read-only base with the tables, fields and `Score Rules` already set
+up — using Airtable's **Copy base**. That covers 11 of the 13 tables; see
+[docs/DATA-MODEL.md](docs/DATA-MODEL.md) for the two it leaves out and why.
+
+Building from scratch instead: [airtable.com](https://airtable.com) → new
+base. Build the 13 tables from [docs/DATA-MODEL.md](docs/DATA-MODEL.md). This
+is the longest step either way. Claude can walk you through it one table at a
+time.
 
 ### Step 6 — Run it and take the tour
 Start it locally ([section 16](#16-running-locally)). On first run you'll see
@@ -425,7 +433,16 @@ overwrite the two PNG files, keeping the filenames.
 
 ## 14. Setting up your Airtable
 
-1. Create a base at [airtable.com](https://airtable.com).
+**Skip most of this by copying the template.** [AbhinavOS Health
+Template](https://airtable.com/apprHhK8MYc51ERpa/shr52rwUsM4sXMZgO) is a
+public, read-only Airtable base with the tables, fields, select options and
+the `Score Rules` behaviour ledger already built. Open the link, use
+Airtable's **Copy base**, and you land straight on step 3 below with 11 of the
+13 tables already in place (see [docs/DATA-MODEL.md](docs/DATA-MODEL.md) for
+what the other two add and why they're safe to skip at first).
+
+1. Create a base at [airtable.com](https://airtable.com) — or copy the
+   template above instead.
 2. Build the tables described in [docs/DATA-MODEL.md](docs/DATA-MODEL.md). Only
    `Daily Log` with a `date` field is strictly required — every other table
    switches on features, and a missing field hides its card rather than
