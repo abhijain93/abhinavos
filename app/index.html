@@ -4,6 +4,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AbhinavOS">
 <title>AbhinavOS</title><!-- replaced at boot by branding.appName -->
+<!-- These three point at the fixed framework icon (icon-192.png / icon-512.png
+     / manifest.json) on purpose, never the person's own profile photo. The
+     favicon and the installed PWA/home-screen icon are read by the browser
+     and OS from these static files and from manifest.json's own icons list
+     — there is no reliable, cross-browser way for a page to swap either one
+     at runtime for a photo chosen after the page has already loaded, and an
+     already-installed PWA icon in particular generally can't be changed at
+     all without an uninstall/reinstall. That's a real constraint of the
+     web-app-manifest model, not a decision this file makes on its own — see
+     ARCHITECTURE.md if this needs revisiting. The profile photo instead
+     appears everywhere the app is already rendering its own UI: the header,
+     onboarding, the Ready screen, and the boot/restart portrait. -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -28,6 +40,15 @@
   opacity:.6;padding:16px 10px 6px;user-select:none}
 .fwmark{width:17px;height:17px;border-radius:50%;opacity:.9;flex:none}
 .fwmark-lg{width:34px;height:34px;border-radius:50%;flex:none}
+/* AbhinavOS character marks — distinct from .fwmark (framework attribution,
+   untouched) and .facelogo/.photo-circle (the user's own profile photo,
+   untouched). .charbadge is the compact brand-mark for small header/AI
+   locations; .char-guide is the larger "guide" presence on the Identity
+   step; .char-context is the small contextual illustration used in an
+   empty/contextual state (Food, Gym, Sleep, Attention, Celebrating). */
+.charbadge{width:34px;height:34px;border-radius:50%;object-fit:cover;object-position:50% 15%;flex:none}
+.char-guide{width:52px;height:auto;object-fit:contain;flex:none;border-radius:10px}
+.char-context{width:38px;height:auto;object-fit:contain;flex:none}
 .aboutrow{display:flex;justify-content:space-between;gap:12px;padding:7px 0;
   border-bottom:1px solid var(--line);font-size:13px}
 .aboutrow:last-child{border-bottom:none}
@@ -45,7 +66,66 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .glow{position:fixed;top:-120px;left:50%;transform:translateX(-50%);width:480px;height:340px;
   background:radial-gradient(closest-side,rgba(236,154,62,.15),rgba(217,114,46,.07) 60%,transparent 75%);filter:blur(10px);pointer-events:none;z-index:0}
 .facelogo{height:34px;width:auto;vertical-align:-10px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+/* Visually hidden but still a real, focusable, keyboard-activatable file
+   input — never display:none, which would drop it from the tab order. */
+.sr-only-file{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sr-only-file:focus-visible~div .btn{outline:2px solid var(--gold);outline-offset:2px}
+.photo-circle{width:96px;height:96px;border-radius:50%;margin:0 auto;background:var(--surface2);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.photo-circle img{width:100%;height:100%;object-fit:cover}
+.photo-circle.lg{width:128px;height:128px}
+.photo-placeholder{width:36px;height:36px;color:var(--muted)}
+.photo-placeholder svg{width:100%;height:100%}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.theme-tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;
+  display:flex;flex-direction:column;align-items:stretch;gap:8px;cursor:pointer;text-align:left;
+  min-height:44px;transition:border-color .15s,box-shadow .15s,transform .15s}
+.theme-tile:active{transform:scale(.98)}
+.theme-tile.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+/* A realistic miniature of the app itself — background, card, greeting,
+   a progress bar, a button — not an abstract dot/line/rectangle, so picking
+   a theme shows what the app will actually look like. */
+.theme-tile-inner{background:var(--ground);border-radius:10px;padding:9px 8px}
+.theme-tile-card{display:block;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
+.theme-tile-greeting{font-family:'Fraunces',serif;font-size:9.5px;color:var(--ink);margin-bottom:5px;font-weight:600}
+.theme-tile-sub{font-size:6.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);margin-bottom:4px}
+.theme-tile-track{height:5px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-bottom:7px}
+.theme-tile-fill{height:100%;width:62%;border-radius:99px;background:var(--gold)}
+.theme-tile-cta{display:block;text-align:center;font-size:7.5px;font-weight:700;border-radius:99px;
+  padding:4px 0;background:var(--gold);color:#1D1006}
+.theme-tile-label{font-size:12.5px;color:var(--ink2);text-align:center;font-weight:500}
+.theme-tile.sel .theme-tile-label{color:var(--ink)}
 .toast .facelogo{height:24px;vertical-align:-7px;margin-right:3px}
+/* ---------- Onboarding wizard: shared type + choice-card system ---------- */
+.wiz-head{font-size:22px;line-height:1.28;margin-bottom:6px;color:var(--ink)}
+.wiz-sub{margin-bottom:16px;color:var(--ink2);font-size:13px;line-height:1.5}
+.wiz-eyebrow{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  font-family:'Archivo',sans-serif;font-weight:600;margin-bottom:8px}
+.q-label{font-size:15.5px;font-weight:600;color:var(--ink);display:block;margin:16px 0 8px;line-height:1.3}
+.q-label:first-child{margin-top:0}
+.q-hint{font-size:12px;color:var(--muted);margin:-4px 0 10px;line-height:1.5}
+.choice-cards{display:flex;flex-direction:column;gap:8px}
+.choice-card{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:var(--surface2);
+  border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-height:52px;
+  transition:border-color .15s,background .15s,transform .15s}
+.choice-card:active{transform:scale(.98)}
+.choice-card.sel{border-color:var(--gold);background:var(--surface);box-shadow:0 0 0 1px var(--gold)}
+.choice-card-icon{width:21px;height:21px;flex:0 0 auto;color:var(--gold)}
+.choice-card-icon svg{width:100%;height:100%}
+.choice-card-body{flex:1;min-width:0}
+.choice-card-label{font-size:14.5px;font-weight:600;color:var(--ink);display:block}
+.choice-card-desc{font-size:12px;color:var(--muted);margin-top:2px;display:block}
+.choice-card-check{width:20px;height:20px;flex:0 0 auto;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent}
+.choice-card.sel .choice-card-check{border-color:var(--gold);background:var(--gold);color:#1D1006}
+.wiz-disclosure{color:var(--ink2);font-weight:500}
+.wiz-substep-dots{display:flex;gap:5px;margin-bottom:14px}
+.wiz-substep-dots span{width:16px;height:3px;border-radius:99px;background:var(--line)}
+.wiz-substep-dots span.on{background:var(--gold)}
+.wiz-card{animation:wizIn .22s ease}
+.wiz-hero-img{width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(0,0,0,.35))}
+@keyframes wizIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 header{position:sticky;top:0;z-index:30;background:var(--ground);
   padding:calc(14px + env(safe-area-inset-top)) 0 12px;margin:0 -14px;padding-left:14px;padding-right:14px;
   display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
@@ -250,6 +330,66 @@ function applyTheme(){
   document.title=APP_NAME;
 }
 
+/* ---------- THEME PRESETS (consumer "Look & Feel" step) ----------
+   A named preset is the primary, user-facing configuration — never a raw
+   hex value. Each preset is a full set of the same 13 tokens applyTheme()
+   already understands, so choosing one is just a different source for the
+   exact CSS custom properties the framework has always used. Nothing new
+   is introduced at the CSS layer; only where the values come from changes. */
+const THEME_PRESETS={
+  warm:{label:"Warm",tokens:{ground:"#120D0A",surface:"#1D1712",surface2:"#261E17",line:"#392C20",
+    ink:"#F2ECE1",ink2:"#C7BAA4",muted:"#9C8D76",primary:"#EC9A3E",secondary:"#D9722E",
+    success:"#8FCB9B",attention:"#E2694A",neutral:"#7A6E58",accent:"#B49BE0"}},
+  midnight:{label:"Midnight",tokens:{ground:"#0B0E14",surface:"#131824",surface2:"#1B2233",line:"#2A3346",
+    ink:"#ECEFF7",ink2:"#B7C0D6",muted:"#7C8AA6",primary:"#6EA8FF",secondary:"#4C7FDB",
+    success:"#7FD9A6",attention:"#FF7A7A",neutral:"#6B7690",accent:"#9AA6FF"}},
+  soft:{label:"Soft",tokens:{ground:"#171314",surface:"#211B1C",surface2:"#2A2224",line:"#3D3234",
+    ink:"#F3E9E6",ink2:"#D0C0BC",muted:"#A38F8A",primary:"#E8A0A0",secondary:"#D98080",
+    success:"#9FCBAE",attention:"#E2896F",neutral:"#8A7A75",accent:"#C9A8D6"}},
+  calm:{label:"Calm",tokens:{ground:"#0E1512",surface:"#16201B",surface2:"#1E2B24",line:"#2E3F35",
+    ink:"#EAF2ED",ink2:"#B9CCC2",muted:"#7E9389",primary:"#5FBFA0",secondary:"#3F9C82",
+    success:"#8FCB9B",attention:"#E2A34A",neutral:"#6F8078",accent:"#8FB6D6"}},
+  energy:{label:"Energy",tokens:{ground:"#150D0A",surface:"#211410",surface2:"#2C1B15",line:"#402721",
+    ink:"#FBF0EA",ink2:"#E0BBAE",muted:"#A9806E",primary:"#FF6B4A",secondary:"#E8432B",
+    success:"#7FD98C",attention:"#FF4D4D",neutral:"#8A6350",accent:"#FFB84D"}},
+  minimal:{label:"Minimal",tokens:{ground:"#121212",surface:"#1A1A1A",surface2:"#232323",line:"#333333",
+    ink:"#F0F0F0",ink2:"#C4C4C4",muted:"#8C8C8C",primary:"#E5E5E5",secondary:"#B8B8B8",
+    success:"#7FD98C",attention:"#E86A5C",neutral:"#6E6E6E",accent:"#A9A9A9"}}
+};
+/* Same precedence USER() uses everywhere: config.js is the base, the
+   person's own choice (a preset, then any Customize overrides) wins. A
+   config.js user who never touches the new picker gets CFG_THEME back
+   unchanged — SETUP.themeId/themeOverrides simply don't exist for them. */
+function resolvedThemeTokens(){
+  const presetId=SETUP&&SETUP.themeId, preset=presetId&&THEME_PRESETS[presetId];
+  const t=Object.assign({},CFG_THEME,preset?preset.tokens:{});
+  const wp=USER("primary",null), wg=USER("ground",null); // legacy 2-colour path, still honoured
+  if(wp)t.primary=wp;
+  if(wg)t.ground=wg;
+  Object.assign(t,(SETUP&&SETUP.themeOverrides)||{});
+  return t;
+}
+function applyThemeLive(){
+  if(typeof document==="undefined")return;
+  const r=document.documentElement, t=resolvedThemeTokens();
+  const map={ground:"--ground",surface:"--surface",surface2:"--surface2",line:"--line",
+    ink:"--ink",ink2:"--ink2",muted:"--muted",primary:"--gold",secondary:"--ember",
+    success:"--teal",attention:"--amber",neutral:"--short",accent:"--violet",radius:"--r"};
+  Object.keys(map).forEach(k=>{ if(t[k])r.style.setProperty(map[k],t[k]); });
+  if(t.fontBody)r.style.setProperty("--font-body",t.fontBody);
+  if(t.fontHeading)r.style.setProperty("--font-heading",t.fontHeading);
+  if(t.fontBody)document.body&&(document.body.style.fontFamily=t.fontBody);
+  document.title=APP_NAME;
+}
+function pickTheme(id){ saveSetup({themeId:id, themeOverrides:{}}); applyThemeLive(); R(); }
+function pickThemeCustom(key,val){
+  const ov=Object.assign({},(SETUP&&SETUP.themeOverrides)||{});
+  ov[key]=val;
+  saveSetup({themeOverrides:ov});
+  applyThemeLive();
+  R();
+}
+
 /* ---------- DEMO DATA ----------
    Deliberately fictional. Round numbers, a made-up name, nobody's real
    figures. Never written anywhere — it exists only in memory for the tour. */
@@ -400,10 +540,69 @@ const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
 const r1=v=>Math.round((v||0)*10)/10;
 const daysBetween=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
 
-/* ---------- BRAND ASSETS ---------- */
+/* ---------- BRAND ASSETS ----------
+   One consumer-facing concept — "Profile photo" — backs both internal image
+   slots, but the two still resolve in a deliberate order so an explicit
+   developer choice is never silently overridden by the person's own photo:
+     1. SETUP.charImage    — an explicit runtime/user override, if one is
+                              ever set (no onboarding control writes this
+                              today, but USER() honours it if something does)
+     2. CFG branding.charImage / CFG.charImage — the developer's own choice
+                              in config.js, if they made one
+     3. FACE_URI            — the person's chosen profile photo, same one
+                              used everywhere else, as a friendly fallback
+     4. the shipped AbhinavOS "welcome" character — the framework's own
+                              default portrait (was "icon-512.png" before
+                              this character set existed)
+   A config.js user who sets branding.charImage explicitly gets exactly that
+   for the boot/restart portrait, even after the person picks their own
+   profile photo in the wizard — only a user/config with no charImage at all
+   falls through to sharing FACE_URI. This precedence is unchanged from
+   before the character set was added; only the final fallback value is
+   new. */
 Object.defineProperty(globalThis,"FACE_URI",{get:()=>USER("faceImage",(CFG.branding&&CFG.branding.faceImage)||CFG.faceImage||"")});
-const CHAR_URI=(window.ABOS_CONFIG&&window.ABOS_CONFIG.charImage)||"icon-512.png";
-const FACE_IMG=FACE_URI?'<img src="'+FACE_URI+'" alt="" class="facelogo">':'';
+Object.defineProperty(globalThis,"CHAR_URI",{get:()=>USER("charImage",(CFG.branding&&CFG.branding.charImage)||CFG.charImage||FACE_URI||CHAR_ASSETS.welcome)});
+/* Was a load-time constant; now a function so the header mark updates the
+   moment a photo is chosen, without needing a full page reload. */
+function faceImgHtml(){ return FACE_URI?'<img src="'+FACE_URI+'" alt="" class="facelogo">':''; }
+
+/* ---------- ABHINAVOS CHARACTER ----------
+   The AbhinavOS caricature (seated on the flying-saucer perch) is a THIRD,
+   separate identity from (a) the user's own profile photo (FACE_URI, above)
+   and (b) the application/PWA home-screen icon (icon-192/512.png,
+   manifest.json — untouched by any of this). It never stands in for either.
+
+   One resolver, one map, so every screen that wants a pose asks for it by
+   name instead of hard-coding a path. Every state name below has shipped
+   artwork; getCharacter() still falls back to "welcome" defensively (e.g. a
+   fork that removes a pose file) rather than ever substitute-generating or
+   leaving a broken <img>.
+
+   An explicit developer/user charImage override (config.js branding.charImage,
+   or a future SETUP.charImage) replaces the CHARACTER wholesale, not just the
+   welcome pose — this app has no per-state art for a custom character, so a
+   custom portrait is shown consistently everywhere rather than mixed with
+   AbhinavOS-specific poses that wouldn't match it. Without an override, each
+   state gets its own shipped pose. */
+/* PNG with real alpha transparency — the original JPGs (same names, .jpg)
+   are kept in app/assets/ untouched as source material; the app itself
+   reads only the .png versions so the character sits directly on the
+   dark UI instead of carrying a baked-in white rectangle. */
+const CHAR_ASSETS={
+  welcome:    "assets/abhinavos-welcome.png",
+  thinking:   "assets/abhinavos-thinking.png",
+  celebrating:"assets/abhinavos-celebrating.png",
+  food:       "assets/abhinavos-food.png",
+  gym:        "assets/abhinavos-gym.png",
+  sleep:      "assets/abhinavos-sleep.png",
+  attention:  "assets/abhinavos-attention.png",
+  brandmark:  "assets/abhinavos-brand-mark.png"
+};
+function getCharacter(state){
+  const override=USER("charImage",(CFG.branding&&CFG.branding.charImage)||CFG.charImage||"");
+  if(override)return override;
+  return CHAR_ASSETS[state]||CHAR_ASSETS.welcome;
+}
 const FLAME=`<svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1.2 3-2.4 4.4-2.7 7.8A2.7 2.7 0 0 0 12 13a2.7 2.7 0 0 0 2.7-2.7c0-.7-.3-1.3-.7-1.8 1.7.9 2.8 2.7 2.8 4.7A4.8 4.8 0 0 1 12 18a4.8 4.8 0 0 1-4.8-4.8c0-3.8 2.8-5 2.8-8.3 0-1 .7-2 2-2.9z" fill="url(#fg)"/><defs><linearGradient id="fg" x1="12" y1="2" x2="12" y2="18" gradientUnits="userSpaceOnUse"><stop stop-color="#EC9A3E"/><stop offset="1" stop-color="#D9722E"/></linearGradient></defs></svg>`;
 // minimalist stroke-icon set — single consistent stroke width (1.8), replaces emoji glyphs
 const MIC_ICON=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0v-6a3 3 0 0 0-3-3Z"/><path d="M18.5 10.5v1a6.5 6.5 0 0 1-13 0v-1"/><line x1="12" y1="18" x2="12" y2="21.5"/><line x1="8.5" y1="21.5" x2="15.5" y2="21.5"/></svg>`;
@@ -439,7 +638,7 @@ function toast(m,bad){
   document.querySelectorAll(".toast").forEach((el,i,all)=>{if(all.length>=3&&i===0)el.remove()});
   const e=document.createElement("div");e.className="toast";e.style.cursor="pointer";
   if(bad){e.style.borderColor="rgba(226,105,74,.6)";e.style.color="var(--amber)";e.textContent=m}
-  else{e.innerHTML=FACE_IMG;e.appendChild(document.createTextNode(" "+m))}
+  else{e.innerHTML=faceImgHtml();e.appendChild(document.createTextNode(" "+m))}
   const kill=()=>{clearTimeout(timer);e.remove();restack()};
   e.addEventListener("click",kill);
   document.body.appendChild(e);
@@ -2508,8 +2707,9 @@ function vCoachWidget(){
   return `<div class="scrim" onclick="if(event.target===this){COACH_OPEN=false;R()}">
     <div class="sheet">
      <div class="grip"></div>
-     <div class="ttl">Coach<span class="mono">${COACH_BUSY?'<span class="spin"></span>':"live"}</span></div>
-     <div class="coachmsgs" id="coachmsgs">${msgs}</div>
+     <div class="ttl"><img src="${getCharacter('brandmark')}" alt="" class="charbadge" style="width:22px;height:22px;margin-right:6px;vertical-align:-6px">Coach<span class="mono">${COACH_BUSY?'<span class="spin"></span>':"live"}</span></div>
+     <div class="coachmsgs" id="coachmsgs">${msgs}${COACH_BUSY?`<div class="row" style="gap:8px;align-items:center;padding:8px 0 2px">
+       <img src="${getCharacter('thinking')}" alt="" class="char-context"><span class="note" style="margin:0">Thinking…</span></div>`:""}</div>
      <div class="row" style="gap:8px;margin-top:10px;align-items:flex-start">
       <textarea id="coachq" class="grow" placeholder="e.g. leg press is taken, what do I sub in?">${esc(window._coachq||"")}</textarea>
       <button class="btn mic ${recording&&micTarget==='coachq'?"rec":""}" onclick="toggleMic('coachq')" aria-label="Voice input">${recording&&micTarget==='coachq'?MIC_STOP_ICON:MIC_ICON}</button></div>
@@ -3173,37 +3373,104 @@ function gateBar(label,val,lo,hi,ceil,floorMsg){
    other answer has a documented default and can be changed later in
    Settings. The wizard never writes source code; it writes localStorage. */
 let WIZ_STEP=0;
-const WIZ_STEPS=["Identity","Branding","About you","Goals","Data & AI"];
+const WIZ_STEPS=["Welcome","Identity","Look & Feel","About you","Goals","Data Connection","Ready"];
+// Ephemeral UI-only sub-position within the "About you" step — never
+// persisted, never a new storage layer. Reset by wizGo() whenever step 3
+// is entered, so it always starts at the front going forward and at the
+// end coming back. Purely so one dense form can be asked as a few small
+// human questions instead of a technical intake sheet all at once.
+let ABOUT_SUBSTEP=0;
+const ABOUT_SUBSTEPS=3;
 
-const ACTIVITY={sedentary:["Sedentary","desk job, little exercise"],
-  light:["Lightly active","1-3 sessions a week"],
-  moderate:["Moderately active","3-5 sessions a week"],
-  high:["Very active","6+ sessions, or physical job"]};
-const GOALS={fatloss:["Fat loss","calorie target below maintenance"],
-  maintain:["Maintain","calorie target around maintenance"],
-  muscle:["Build muscle","calorie target above maintenance"],
-  health:["General health","no calorie steer, just tracking"]};
-const TONES={direct:["Direct","short, factual, no cheerleading"],
-  supportive:["Supportive","encouraging, gentler framing"],
-  strict:["Strict","holds you to the target, names the gap"]};
+const ACTIVITY={sedentary:["Mostly sitting","Desk job, not much structured exercise"],
+  light:["Some exercise","A few sessions a week"],
+  moderate:["Exercise regularly","3-5 sessions a week"],
+  high:["Very active","6+ sessions a week, or a physical job"]};
+const GOALS={fatloss:["Lose fat","Trim down while keeping your strength"],
+  muscle:["Build muscle","Gain size and strength over time"],
+  maintain:["Maintain my weight","Stay steady where you are"],
+  health:["Improve my health","Just track, and build better habits"]};
+const GOAL_ICONS={fatloss:I_STATS,muscle:I_GYM,maintain:I_BODY,health:I_TODAY};
+const TONES={direct:["Direct","Short, factual, no cheerleading"],
+  supportive:["Supportive","Encouraging, gentler framing"],
+  strict:["Strict","Holds you to the target, names the gap"]};
+
+// Per-step headline + supporting line. Kept apart from WIZ_STEPS (still used
+// for the progress dots and internal step names) so the on-screen copy can
+// read like a finished product's own words rather than a menu label.
+const WIZ_COPY=[
+  {head:"Let's make this yours.",sub:"A few quick choices and your personal health space is ready."},
+  {head:"Make it yours",sub:"A name, and a photo if you'd like one — that's it."},
+  {head:"Choose your look",sub:"You can change this anytime."},
+  {head:"About you",sub:"So your numbers actually mean something."},
+  {head:"What are you working toward?",sub:"Pick what fits best — you can change it anytime."},
+  {head:"Connect your data",sub:""},
+  {head:"You're ready.",sub:""}
+];
 
 function wizField(id,label,val,ph,type){
-  return `<label class="note" style="display:block;margin:10px 0 4px">${esc(label)}</label>
+  return `<label class="note" for="${id}" style="display:block;margin:10px 0 4px">${esc(label)}</label>
    <input id="${id}" type="${type||"text"}" value="${esc(val==null?"":val)}" placeholder="${esc(ph||"")}" autocomplete="off">`;
 }
+// Primary-question variant of wizField() — a real question as the label
+// (not a small caption above a box), used for the handful of things every
+// first-time user is actually asked, as opposed to the smaller wizField()
+// still used for optional/advanced fields tucked behind a disclosure.
+function wizQ(id,question,val,ph,type,hint){
+  return `<label class="q-label" for="${id}">${esc(question)}</label>
+    ${hint?`<div class="q-hint">${esc(hint)}</div>`:""}
+    <input id="${id}" type="${type||"text"}" value="${esc(val==null?"":val)}" placeholder="${esc(ph||"")}" autocomplete="off">`;
+}
 function wizChoice(id,map,cur){
-  return Object.keys(map).map(k=>`<button class="btn sm ${cur===k?"p":""}"
-    style="margin:4px 4px 0 0" onclick="wizPick('${id}','${k}')">${esc(map[k][0])}</button>`).join("")
+  return Object.keys(map).map(k=>`<button type="button" class="btn sm ${cur===k?"p":""}"
+    style="margin:4px 4px 0 0" onclick="wizPick('${id}','${k}')" aria-pressed="${cur===k}">${esc(map[k][0])}</button>`).join("")
     + (cur&&map[cur]?`<div class="note" style="margin-top:6px">${esc(map[cur][1])}</div>`:"");
+}
+// Larger, tappable card-style choice — used for the two decisions this
+// screen most wants a first-time user to notice (activity level, goal),
+// where a row of small text pills would undersell how much they matter
+// and would be a poor mobile touch target.
+function wizCardChoice(id,map,cur,icons){
+  return `<div class="choice-cards" role="group">${Object.keys(map).map(k=>{
+    const sel=cur===k, icon=icons&&icons[k];
+    return `<button type="button" class="choice-card ${sel?"sel":""}" onclick="wizPick('${id}','${k}')" aria-pressed="${sel}">
+      ${icon?`<span class="choice-card-icon" aria-hidden="true">${icon}</span>`:""}
+      <span class="choice-card-body">
+        <span class="choice-card-label">${esc(map[k][0])}</span>
+        ${map[k][1]?`<span class="choice-card-desc">${esc(map[k][1])}</span>`:""}
+      </span>
+      <span class="choice-card-check" aria-hidden="true">✓</span>
+    </button>`;
+  }).join("")}</div>`;
 }
 function wizPick(id,val){ wizCapture(); saveSetup({[id]:val}); R(); }
 
-/* Reads whatever is currently on screen so answers survive step changes. */
+/* Mirrors the single "What should we call you?" answer into the display
+   name and a suggested app name, e.g. typing "Priya" quietly prepares
+   displayName="Priya" and appName="PriyaOS" — both saved the normal way by
+   wizCapture() on Continue. Each only overwrites while its own field is
+   still untouched by the person directly (via "Customize app name"), so a
+   deliberate edit there is never clobbered by further typing above it. */
+function mirrorIdentity(){
+  const nameEl=document.getElementById("wz_name");
+  const dispEl=document.getElementById("wz_display");
+  const appEl=document.getElementById("wz_app");
+  if(!nameEl)return;
+  if(dispEl&&dispEl.dataset.userEdited!=="1")dispEl.value=nameEl.value;
+  if(appEl&&appEl.dataset.userEdited!=="1"){
+    const first=(nameEl.value||"").trim().split(/\s+/)[0];
+    appEl.value=first?(first.charAt(0).toUpperCase()+first.slice(1)+"OS"):"";
+  }
+}
+
+/* Reads whatever is currently on screen so answers survive step changes.
+   Photo and theme are NOT here — those save directly on their own change
+   event (onPhotoSelected/pickTheme/pickThemeCustom), same as wizPick(),
+   since neither is a plain text field to scrape by id. */
 function wizCapture(){
   const g=id=>{const e=document.getElementById(id);return e?e.value.trim():undefined};
   const patch={};
   [["wz_name","name"],["wz_display","displayName"],["wz_app","appName"],["wz_tag","tagline"],
-   ["wz_face","faceImage"],["wz_primary","primary"],["wz_ground","ground"],
    ["wz_height","heightCm"],["wz_age","ageYears"],["wz_weight","startingWeightKg"],
    ["wz_targetw","targetWeightKg"],["wz_kcal","kcalFloor"],["wz_protein","proteinPerKg"],
    ["wz_water","waterLitres"],["wz_train","trainingDays"],["wz_base","baseId"],
@@ -3211,13 +3478,45 @@ function wizCapture(){
   ].forEach(([el,key])=>{const v=g(el);if(v!==undefined&&v!=="")patch[key]=v});
   if(Object.keys(patch).length)saveSetup(patch);
 }
-function wizGo(n){ wizCapture(); WIZ_STEP=Math.max(0,Math.min(WIZ_STEPS.length-1,n)); R(); }
+function wizGo(n){
+  wizCapture();
+  // Entering "About you" fresh always starts at its first small question;
+  // arriving back into it from Goals lands on its last one, not its first.
+  if(n===3&&WIZ_STEP!==3)ABOUT_SUBSTEP=(n>WIZ_STEP)?0:ABOUT_SUBSTEPS-1;
+  WIZ_STEP=Math.max(0,Math.min(WIZ_STEPS.length-1,n));
+  R();
+}
+// "About you"'s own Back/Continue — steps through its 3 small questions
+// before actually moving the wizard on, without any new persisted state.
+function aboutBack(){
+  wizCapture();
+  if(ABOUT_SUBSTEP>0){ ABOUT_SUBSTEP--; R(); } else wizGo(2);
+}
+function aboutNext(){
+  wizCapture();
+  if(ABOUT_SUBSTEP<ABOUT_SUBSTEPS-1){ ABOUT_SUBSTEP++; R(); } else wizGo(4);
+}
 
 function wizFinish(){
   wizCapture();
   const s=SETUP||{};
   if(!s.name||!s.appName){ alert("A name and an app name are needed to continue."); return; }
   saveSetup({completed:true, completedAt:new Date().toISOString()});
+  if(s.dataChoice==="later"){
+    // Chose "I'll do this later" on the Data Connection step: onboarding is
+    // still fully complete (name/photo/theme/goal all saved), but instead of
+    // sending them into the technical connect screen, drop them straight
+    // into the app on the same safe sample-data pipeline the pre-onboarding
+    // demo tour already uses — a banner (see demoBar in R()) makes the
+    // pending connection visible and offers connectDataNow() to finish it
+    // whenever they're ready, from right there or from Settings.
+    saveSetup({dataDeferred:true});
+    applyBrandingFromSetup();
+    DEMO=true; TOKEN=null; view="today";
+    CACHE_BUST_DEMO();
+    loadAll(true);
+    return;
+  }
   DEMO=false;
   applyBrandingFromSetup();
   state = TOKEN ? "loading" : "needtoken";
@@ -3225,92 +3524,266 @@ function wizFinish(){
   if(TOKEN) loadAll(true);
 }
 
+/* Opens the real Airtable connection screen (vSetup(), token entry +
+   Field-ID Auto-Discovery — completely unchanged) for someone who already
+   finished onboarding and deferred this earlier. Reachable from the
+   deferred-connection banner (demoBar in R()) and from Settings
+   (vProfileSettings()). Does not touch or re-ask anything else. */
+function connectDataNow(){
+  DEMO=false; state="needtoken"; R();
+}
+
 /* Re-applies name/theme immediately, so finishing the wizard visibly
    changes the app rather than needing a reload. */
 function applyBrandingFromSetup(){
-  try{
-    const s=SETUP||{};
-    if(s.appName){ document.title=s.appName; }
-    const r=document.documentElement;
-    if(s.primary)r.style.setProperty("--gold",s.primary);
-    if(s.ground)r.style.setProperty("--ground",s.ground);
-  }catch(e){}
+  try{ applyThemeLive(); }catch(e){}
+}
+
+/* ---------- PHOTO PICKER (consumer "Profile photo" step) ----------
+   One concept, one control. The person never sees a path, a URL, or the
+   internal faceImage/charImage names — just a circle, "Add Photo", and
+   (once set) "Change Photo"/"Remove Photo". Saves into the existing SETUP
+   architecture under the same "faceImage" key the app has always read
+   through USER() — CHAR_URI now falls back to that same key too (see the
+   BRAND ASSETS block above), so one photo covers both existing image
+   slots without a second workflow. */
+function onPhotoSelected(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  if(!/^image\//.test(file.type)){ toast("Please choose an image file",true); input.value=""; return; }
+  const reader=new FileReader();
+  reader.onerror=()=>toast("Could not read that file",true);
+  reader.onload=()=>{
+    const img=new Image();
+    img.onerror=()=>toast("Could not read that image",true);
+    img.onload=()=>{
+      // Downscale so a multi-megabyte phone photo never has to be stored
+      // full-size — this is only ever shown small (header mark, boot/restart
+      // portrait), so 640px on the long edge is already generous.
+      const MAX=640;
+      let w=img.width,h=img.height;
+      if(w>h){ if(w>MAX){h=Math.round(h*MAX/w);w=MAX;} }
+      else{ if(h>MAX){w=Math.round(w*MAX/h);h=MAX;} }
+      const cv=document.createElement("canvas");
+      cv.width=w;cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      const CEILING=320*1024; // sensible cap so one photo can't eat the shared localStorage quota
+      let quality=0.85, uri=cv.toDataURL("image/jpeg",quality);
+      while(uri.length>CEILING&&quality>0.35){ quality-=0.1; uri=cv.toDataURL("image/jpeg",quality); }
+      if(uri.length>CEILING){ toast("That photo is too large even compressed — try a different one",true); return; }
+      wizCapture(); // commit any in-progress text on this step before the re-render below
+      saveSetup({faceImage:uri});
+      R();
+      toast("Photo added");
+    };
+    img.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(){ wizCapture(); saveSetup({faceImage:""}); R(); }
+function wizPhotoWidget(){
+  const has=!!(SETUP&&SETUP.faceImage);
+  return `<div style="margin-top:6px">
+    <div class="q-label" style="text-align:center">Add a photo</div>
+    <div class="photo-circle lg" style="margin:8px auto 0">${has?`<img src="${esc(SETUP.faceImage)}" alt="Your profile photo">`
+      :`<span class="photo-placeholder" aria-hidden="true">${I_BODY}</span>`}</div>
+    <input class="sr-only-file" type="file" id="wz_photo_input" accept="image/*" capture="environment"
+      onchange="onPhotoSelected(this)" aria-label="${has?"Change profile photo":"Add profile photo"}">
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+      <label class="btn" for="wz_photo_input" style="cursor:pointer">${has?"Change Photo":"Add Photo"}</label>
+      ${has?`<button type="button" class="btn" onclick="removePhoto()">Remove Photo</button>`:""}
+    </div>
+    <div class="note" style="margin-top:8px;text-align:center">Optional — from your camera roll, files, or camera.</div>
+  </div>`;
+}
+
+/* ---------- THEME PICKER (consumer "Look & Feel" step) ----------
+   Named preset tiles, each a small, real render of the app's own layout —
+   a greeting, a progress bar, a button — built from that preset's own
+   tokens (scoped with inline CSS custom properties on the tile itself, so
+   picking one doesn't affect the rest of the page until it's actually
+   selected). No hex ever shown unless the person opens "Customize", which
+   uses native <input type=color> pickers — never a text field to type a
+   code into. */
+function wizThemeTile(id,preset){
+  const t=preset.tokens, sel=(SETUP&&SETUP.themeId)===id;
+  const vars=`--ground:${t.ground};--surface:${t.surface};--surface2:${t.surface2};--line:${t.line};
+    --ink:${t.ink};--ink2:${t.ink2};--muted:${t.muted};--gold:${t.primary};--ember:${t.secondary};
+    --teal:${t.success};--amber:${t.attention};--violet:${t.accent}`.replace(/\s+/g," ");
+  return `<button type="button" class="theme-tile ${sel?"sel":""}" style="${esc(vars)}"
+     onclick="pickTheme('${id}')" aria-pressed="${sel}" aria-label="${esc(preset.label)} theme">
+    <span class="theme-tile-inner">
+      <span class="theme-tile-card">
+        <span class="theme-tile-greeting">Good morning</span>
+        <span class="theme-tile-sub">Today's progress</span>
+        <span class="theme-tile-track"><span class="theme-tile-fill"></span></span>
+        <span class="theme-tile-cta" aria-hidden="true">Log food</span>
+      </span>
+    </span>
+    <span class="theme-tile-label">${esc(preset.label)}${sel?" ✓":""}</span>
+  </button>`;
+}
+function wizThemeGrid(){
+  const grid=Object.keys(THEME_PRESETS).map(id=>wizThemeTile(id,THEME_PRESETS[id])).join("");
+  const open=!!OPEN_SECTIONS["wz_theme_custom"];
+  const ov=(SETUP&&SETUP.themeOverrides)||{};
+  return `<div class="theme-grid" role="group" aria-label="Choose a theme">${grid}</div>
+    <button type="button" class="btn sm wiz-disclosure" style="margin-top:12px" onclick="toggleSection('wz_theme_custom')">
+      ${open?"Hide":"Customize"}${open?"":" ›"}</button>
+    ${open?`<div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap">
+      <label class="note">Accent colour<br>
+        <input type="color" style="width:52px;height:36px;padding:2px;margin-top:4px"
+          value="${esc(ov.primary||THEME_PRESETS[(SETUP&&SETUP.themeId)||"warm"].tokens.primary)}"
+          onchange="pickThemeCustom('primary',this.value)" aria-label="Custom accent colour"></label>
+      <label class="note">Background colour<br>
+        <input type="color" style="width:52px;height:36px;padding:2px;margin-top:4px"
+          value="${esc(ov.ground||THEME_PRESETS[(SETUP&&SETUP.themeId)||"warm"].tokens.ground)}"
+          onchange="pickThemeCustom('ground',this.value)" aria-label="Custom background colour"></label>
+    </div>`:""}`;
 }
 
 function vWizard(){
   const s=SETUP||{};
   const dots=WIZ_STEPS.map((l,i)=>`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;
     margin-right:5px;background:${i===WIZ_STEP?"var(--gold)":i<WIZ_STEP?"var(--teal)":"var(--line)"}"></span>`).join("");
-  let b="";
+  let b="", primary="Continue", showBack=WIZ_STEP>0, showDemo=false;
+  let backHandler=`wizGo(${WIZ_STEP-1})`, nextHandler=`wizGo(${WIZ_STEP+1})`;
+  const copy=WIZ_COPY[WIZ_STEP];
 
   if(WIZ_STEP===0){
-    b=`<div class="note" style="margin-bottom:6px">This is your app. Name it whatever you like.</div>
-      ${wizField("wz_name","Your name","","e.g. Rahul Sharma")}
-      ${wizField("wz_display","What should the app call you?",s.displayName,"e.g. Rahul")}
-      ${wizField("wz_app","App name",s.appName,"e.g. RahulOS")}
-      ${wizField("wz_tag","Tagline (optional)",s.tagline,"e.g. My health, tracked properly")}`;
-    b=b.replace('id="wz_name" type="text" value=""','id="wz_name" type="text" value="'+esc(s.name||"")+'"');
+    // The visual comes first here, then the headline — the one screen where
+    // the shared header-above-body layout below is deliberately not used.
+    b=`<div style="text-align:center;padding:2px 0 4px">
+      <img src="${CHAR_URI}" alt="" class="wiz-hero-img">
+      <div class="wiz-head serif" style="text-align:center;margin-top:16px">${esc(copy.head)}</div>
+      <div class="note wiz-sub" style="text-align:center">${esc(copy.sub)}</div>
+    </div>`;
+    primary="Get Started"; showDemo=true;
   }
   else if(WIZ_STEP===1){
-    b=`<div class="note" style="margin-bottom:6px">Your logo and colours. All of this is changeable later.</div>
-      ${wizField("wz_face","Your avatar or logo (image path or URL)",s.faceImage,"assets/my-avatar.png")}
-      <div class="note" style="margin-top:4px">Square PNG with a transparent background works best. Leave blank for none.</div>
-      ${wizField("wz_primary","Primary colour",s.primary||"#EC9A3E","#EC9A3E")}
-      ${wizField("wz_ground","Background colour",s.ground||"#120D0A","#120D0A")}`;
+    const advOpen=!!OPEN_SECTIONS["wz_identity_custom"];
+    b=`${wizQ("wz_name","What should we call you?",s.name,"e.g. Priya")}
+      <input type="hidden" id="wz_display" value="${esc(s.displayName||s.name||"")}">
+      ${advOpen
+        ? `<div style="margin-top:14px">
+            ${wizField("wz_app","App name",s.appName,"e.g. PriyaOS")}
+            ${wizField("wz_tag","Tagline (optional)",s.tagline,"e.g. My health, tracked properly")}
+          </div>
+          <button type="button" class="btn sm wiz-disclosure" style="margin-top:2px" onclick="toggleSection('wz_identity_custom')">Hide</button>`
+        : `<input type="hidden" id="wz_app" value="${esc(s.appName||"")}">
+          <input type="hidden" id="wz_tag" value="${esc(s.tagline||"")}">
+          <button type="button" class="btn sm wiz-disclosure" style="margin-top:2px" onclick="toggleSection('wz_identity_custom')">Customize app name ›</button>`}
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+        <div class="row" style="gap:10px;align-items:center;margin-bottom:14px">
+          <img src="${getCharacter('welcome')}" alt="" class="char-guide">
+          <div class="note" style="margin:0">This is Abhinav — your guide around the app. Your own photo below is separate, and it's just for your profile.</div>
+        </div>
+        ${wizPhotoWidget()}
+      </div>`;
+    b=b.replace('id="wz_name" type="text"','id="wz_name" type="text" oninput="mirrorIdentity()"');
+    b=b.replace('id="wz_app" type="text"','id="wz_app" type="text" oninput="this.dataset.userEdited=\'1\'"');
   }
   else if(WIZ_STEP===2){
-    b=`<div class="note" style="margin-bottom:8px">Used to estimate your calorie needs for roughly the first three weeks.
-      After that the app measures your actual energy balance from what you log, and this stops mattering.
-      Leave it blank and the app will say your target isn't personalised rather than guessing.</div>
-      ${wizField("wz_height","Height (cm)",s.heightCm,"175","number")}
-      ${wizField("wz_age","Age (years)",s.ageYears,"30","number")}
-      <label class="note" style="display:block;margin:10px 0 4px">Sex (for the calorie formula)</label>
-      ${wizChoice("sex",{male:["Male",""],female:["Female",""]},s.sex)}
-      ${wizField("wz_weight","Current weight (kg)",s.startingWeightKg,"70","number")}
-      <label class="note" style="display:block;margin:12px 0 4px">Activity level</label>
-      ${wizChoice("activity",ACTIVITY,s.activity)}`;
+    b=wizThemeGrid();
   }
   else if(WIZ_STEP===3){
-    b=`<div class="note" style="margin-bottom:8px"><b>These are your numbers, not medical advice.</b>
-      The suggestions below are common starting points, not recommendations for you specifically.
-      If a target matters to your health, check it with a doctor or dietitian.</div>
-      <label class="note" style="display:block;margin:4px 0">Primary goal</label>
-      ${wizChoice("goal",GOALS,s.goal)}
-      ${wizField("wz_targetw","Target weight (kg, optional)",s.targetWeightKg,"","number")}
-      ${wizField("wz_kcal","Calorie floor — never go below this",s.kcalFloor,"2000","number")}
-      ${wizField("wz_protein","Protein, grams per kg bodyweight",s.proteinPerKg,"1.8","number")}
-      ${wizField("wz_water","Water target (litres)",s.waterLitres,"3","number")}
-      ${wizField("wz_train","Training days per week",s.trainingDays,"4","number")}
-      ${wizField("wz_diet","Dietary preference (optional)",s.dietHint," Assume Indian home cooking, vegetarian.")}
-      ${wizField("wz_avoid","Foods to avoid (optional)",s.avoidFoods,"shellfish, peanuts")}
-      ${wizField("wz_equip","Equipment available (optional)",s.equipment,"full gym / dumbbells only / bodyweight")}
-      <label class="note" style="display:block;margin:12px 0 4px">Coaching tone</label>
-      ${wizChoice("tone",TONES,s.tone)}`;
+    const stepDots=Array.from({length:ABOUT_SUBSTEPS},(_,i)=>`<span class="${i===ABOUT_SUBSTEP?"on":""}"></span>`).join("");
+    let sub="";
+    if(ABOUT_SUBSTEP===0){
+      sub=`${wizQ("wz_height","How tall are you?",s.heightCm,"e.g. 175 cm","number")}
+        ${wizQ("wz_weight","What's your current weight?",s.startingWeightKg,"e.g. 70 kg","number")}`;
+    } else if(ABOUT_SUBSTEP===1){
+      sub=`${wizQ("wz_age","How old are you?",s.ageYears,"e.g. 30","number")}
+        <label class="q-label">What's your biological sex?</label>
+        <div class="q-hint">Only used to estimate your calorie needs — nothing else.</div>
+        ${wizChoice("sex",{male:["Male",""],female:["Female",""]},s.sex)}`;
+    } else {
+      sub=`<label class="q-label">How active are you normally?</label>
+        ${wizCardChoice("activity",ACTIVITY,s.activity)}`;
+    }
+    b=`<div class="wiz-substep-dots">${stepDots}</div>${sub}
+      <div class="note" style="margin-top:16px">Leave anything blank — the app will just say a target isn't personalised yet, rather than guess.</div>`;
+    backHandler="aboutBack()"; nextHandler="aboutNext()";
   }
-  else {
-    b=`<div class="note" style="margin-bottom:8px">Your data lives in <b>your own</b> Airtable base.
-      Nothing is stored by this app's author and there is no server in between —
-      your browser talks to your base directly.</div>
-      ${wizField("wz_base","Your Airtable base ID",s.baseId,"appXXXXXXXXXXXXXX")}
-      <div class="note" style="margin-top:4px">Found in your base's URL. See docs/DATA-MODEL.md for building the base itself.</div>
-      <div class="note" style="margin-top:12px;line-height:1.6">
-        <b>Next:</b> after finishing you'll be asked for your Airtable token, then
-        your AI key in Settings. Neither is stored in any file — both stay in this browser.
-      </div>`;
+  else if(WIZ_STEP===4){
+    const advOpen=!!OPEN_SECTIONS["wz_goals_advanced"], optOpen=!!OPEN_SECTIONS["wz_goals_optional"];
+    b=`${wizCardChoice("goal",GOALS,s.goal,GOAL_ICONS)}
+      <label class="q-label" style="margin-top:20px">How should the app talk to you?</label>
+      ${wizChoice("tone",TONES,s.tone)}
+      <button type="button" class="btn sm wiz-disclosure" style="margin-top:18px;display:block;width:fit-content" onclick="toggleSection('wz_goals_advanced')">
+        ${advOpen?"Hide advanced targets":"Advanced targets ›"}</button>
+      ${advOpen?`<div style="margin-top:6px">
+        ${wizField("wz_targetw","Target weight (kg, optional)",s.targetWeightKg,"","number")}
+        ${wizField("wz_kcal","Calorie floor — never go below this (optional)",s.kcalFloor,"2000","number")}
+        ${wizField("wz_protein","Protein target, grams per kg bodyweight (optional)",s.proteinPerKg,"1.8","number")}
+        ${wizField("wz_water","Water target, litres (optional)",s.waterLitres,"3","number")}
+        ${wizField("wz_train","Training days per week (optional)",s.trainingDays,"4","number")}
+        <div class="note" style="margin-top:6px">Leave any of these blank and the app fills in a sensible default from your profile and goal.</div>
+      </div>`:""}
+      <button type="button" class="btn sm wiz-disclosure" style="margin-top:10px;display:block;width:fit-content" onclick="toggleSection('wz_goals_optional')">
+        ${optOpen?"Hide":"Anything you'd like the app to know? (optional) ›"}</button>
+      ${optOpen?`<div style="margin-top:6px">
+        ${wizField("wz_diet","Dietary preference",s.dietHint,"e.g. vegetarian, Indian home cooking")}
+        ${wizField("wz_avoid","Foods to avoid",s.avoidFoods,"e.g. shellfish, peanuts")}
+        ${wizField("wz_equip","Equipment available",s.equipment,"e.g. full gym / dumbbells only / bodyweight")}
+      </div>`:""}
+      <div class="note" style="margin-top:16px">These are starting points, not medical advice — check anything that matters to your health with a doctor or dietitian.</div>`;
+  }
+  else if(WIZ_STEP===5){
+    // A choice first, not a form: most first-time users should see two
+    // plain buttons, not a base-ID field. The technical Airtable step
+    // (still exactly the same one vSetup() offers after onboarding, Field-ID
+    // Auto-Discovery included) only appears once someone actively asks for
+    // it by picking "Connect my data" — true progressive disclosure, not
+    // just a smaller font on the same form.
+    const choice=s.dataChoice;
+    b=`<div class="note" style="margin-bottom:14px;line-height:1.6">${esc(s.appName||"This app")} needs access to your
+      personal data space to save and read your health logs.</div>
+      ${wizCardChoice("dataChoice",{
+        now:["Connect my data","Takes about a minute — you'll need your Airtable base"],
+        later:["I'll do this later","Explore with sample data for now, connect anytime from Settings"]
+      },choice)}
+      ${choice==="now"?`<div style="margin-top:20px">
+        <div class="wiz-eyebrow">Advanced connection</div>
+        ${wizQ("wz_base","Your data space ID",s.baseId,"appXXXXXXXXXXXXXX",null,"You'll find this in your browser's address bar when your data space is open — the part that starts with “app”.")}
+        <div class="note" style="margin-top:14px;line-height:1.6">
+          Next, you'll paste an access key once — that step can also detect your table setup for you automatically.
+          Nothing here is stored anywhere but this browser.
+        </div>
+      </div>`:""}
+      ${choice==="later"?`<div class="note" style="margin-top:16px;line-height:1.6">
+        No problem — the app will show sample data until you connect. You can do that anytime from Settings.
+      </div>`:""}`;
+  }
+  else { // Ready
+    const themeLabel=THEME_PRESETS[s.themeId]?THEME_PRESETS[s.themeId].label:"Warm";
+    const goalLabel=s.goal&&GOALS[s.goal]?GOALS[s.goal][0]:"";
+    b=`<div style="text-align:center;padding:4px 0">
+      <div class="photo-circle lg" style="margin:0 auto 16px">${s.faceImage?`<img src="${esc(s.faceImage)}" alt="">`:`<span class="photo-placeholder" aria-hidden="true">${I_BODY}</span>`}</div>
+      <div class="ttl" style="justify-content:center">${esc(s.appName||"Your app")}</div>
+      <div class="note">${s.displayName?`For ${esc(s.displayName)} · `:""}${esc(themeLabel)} theme</div>
+      ${goalLabel?`<div class="note" style="margin-top:2px">Working toward: ${esc(goalLabel)}</div>`:""}
+      <div class="note" style="margin-top:14px;line-height:1.6">
+        Everything here is yours to change later — photo, look, goals, all of it.
+      </div>
+    </div>`;
+    primary="Open my app";
   }
 
-  return `<div class="card">
-    <div style="margin-bottom:10px">${dots}</div>
-    <div class="ttl">${esc(WIZ_STEPS[WIZ_STEP])}</div>
-    <div class="note" style="margin-bottom:10px">Step ${WIZ_STEP+1} of ${WIZ_STEPS.length}</div>
+  const headerHtml = WIZ_STEP===0 ? "" : `<div class="wiz-head serif">${esc(copy.head)}</div>
+    ${copy.sub?`<div class="note wiz-sub">${esc(copy.sub)}</div>`:""}`;
+
+  return `<div class="card wiz-card">
+    <div style="margin-bottom:14px">${dots}</div>
+    ${headerHtml}
     ${b}
-    <div style="display:flex;gap:8px;margin-top:16px">
-      ${WIZ_STEP>0?`<button class="btn" onclick="wizGo(${WIZ_STEP-1})">Back</button>`:""}
+    <div style="display:flex;gap:8px;margin-top:18px">
+      ${showBack?`<button type="button" class="btn" onclick="${backHandler}">Back</button>`:""}
       ${WIZ_STEP<WIZ_STEPS.length-1
-        ? `<button class="btn p grow" onclick="wizGo(${WIZ_STEP+1})">Continue</button>`
-        : `<button class="btn p grow" onclick="wizFinish()">Finish setup</button>`}
+        ? `<button type="button" class="btn p grow" onclick="${nextHandler}">${primary}</button>`
+        : `<button type="button" class="btn p grow" onclick="wizFinish()">${primary}</button>`}
     </div>
-    ${WIZ_STEP===0?`<button class="btn full" style="margin-top:8px;opacity:.7" onclick="enterDemo()">Just show me the app first</button>`:""}
+    ${showDemo?`<button type="button" class="btn full" style="margin-top:8px;opacity:.7" onclick="enterDemo()">Explore first</button>`:""}
   </div>`;
 }
 
@@ -3739,6 +4212,8 @@ function vToday(){
      <div class="tiny" style="margin-top:6px">${wk.unlocked
         ? "Reward unlocked. Non-food only — a purchase, a tracking-free day, kit."
         : Math.round(REWARD_THRESHOLD_PCT*100-pct)+"% to the weekly reward"}</div>
+     ${wk.unlocked?`<div class="row" style="gap:8px;align-items:center;margin-top:8px">
+       <img src="${getCharacter('celebrating')}" alt="" class="char-context"></div>`:""}
      ${SCORE.today?`<div class="row sp" style="margin-top:9px;padding-top:9px;border-top:1px solid var(--line)">
        <span class="tiny">Today</span>
        <span class="mono tiny">+${SCORE.today.earned}${SCORE.today.lostCapped?" −"+SCORE.today.lostCapped:""} = ${SCORE.today.net}</span></div>`:""}
@@ -3850,13 +4325,24 @@ function vFood(){
      <span class="dot d-${esc(dv(f,SCHEMA.F.tol)||"Safe")}"></span>
      <span class="grow"><span class="nm">${esc(dv(f,SCHEMA.F.item)||"")}</span>
      <span class="mc">${Math.round(n(dv(f,SCHEMA.F.kcal)))} kcal · ${r1(n(dv(f,SCHEMA.F.p)))}P · ${r1(n(dv(f,SCHEMA.F.c)))}C · ${r1(n(dv(f,SCHEMA.F.f)))}F</span></span></div>`).join("")
-    :`<div class="note">Nothing logged yet today.</div>`}</div>`;
+    :`<div class="row" style="gap:10px;align-items:center">
+       <img src="${getCharacter('food')}" alt="" class="char-context">
+       <div class="note" style="margin:0">Nothing logged yet today.</div>
+      </div>`}</div>`;
 }
 
 function gymTodaySummaryCard(){
   const sess=todayGymSession();
   const lifts=todayLifts();
-  if(!sess&&!lifts.length)return "";
+  if(!sess&&!lifts.length){
+    // Contextual empty state — skip it on a Rest day, where "nothing logged"
+    // isn't a gap to fill, it's the plan working as intended.
+    if(GYMTODAY&&GYMTODAY.split==="Rest")return "";
+    return `<div class="card tight"><div class="row" style="gap:10px;align-items:center">
+      <img src="${getCharacter('gym')}" alt="" class="char-context">
+      <div class="note" style="margin:0">Nothing logged yet today.</div>
+     </div></div>`;
+  }
   const bits=[];
   if(sess){
     const split=dv(sess,SCHEMA.G.split);
@@ -3958,6 +4444,10 @@ function vBody(){
    <div class="note" style="margin-top:8px">Post-toilet, minimal water. Saturday is the number that counts.</div></div>
 
   <div class="card"><div class="ttl">Sleep last night${SAVE_FLASH.sleep?'<span class="pill ok">Saved ✓</span>':''}</div>
+   ${!val('f_total',D.sleep)?`<div class="row" style="gap:10px;align-items:center;margin-bottom:10px">
+     <img src="${getCharacter('sleep')}" alt="" class="char-context">
+     <div class="note" style="margin:0">Not logged yet — how did last night go?</div>
+    </div>`:""}
    <div class="row wrap" style="gap:9px">
     <div class="grow"><div class="tiny">Total (h)</div><input id="f_total" class="mono" inputmode="decimal" value="${val('f_total',D.sleep)}"></div>
     <div class="grow"><div class="tiny">Deep (min)</div><input id="f_deep" class="mono" inputmode="numeric" value="${val('f_deep',D.deep)}"></div></div>
@@ -4253,7 +4743,12 @@ function dropItem(i){pendingMeal.items.splice(i,1);if(!pendingMeal.items.length)
 async function submitToken(){
   const el=document.getElementById("tok");const v=(el&&el.value||"").trim();
   if(!v){toast("Paste the token first",true);return}
-  await saveToken(v);loadAll();
+  await saveToken(v);
+  // A successful token entry resolves the deferred-data state. Without this,
+  // Settings would continue to show "Your data isn't connected" even though a
+  // real token had been saved and loadAll() had switched back to Airtable.
+  saveSetup({dataDeferred:false});
+  loadAll();
 }
 async function forgetToken(){await saveToken(null);state="needtoken";R()}
 async function submitGem(){const el=document.getElementById("gk");const v=(el&&el.value||"").trim();
@@ -4711,10 +5206,14 @@ function exportConfig(){
     if(s[k])L.push("    "+k+": "+q(s[k])+",");
   });
   L.push("  },");
-  if(s.primary||s.ground){
+  // Theme is stored as a preset id + optional Customize overrides, but
+  // config.js only understands raw tokens — resolve them here so the
+  // exported file works exactly like the hand-written theme block always
+  // has, with no new format for a developer to learn.
+  if(s.themeId||s.primary||s.ground){
+    const resolved=resolvedThemeTokens();
     L.push("  theme: {");
-    if(s.primary)L.push("    primary: "+q(s.primary)+",");
-    if(s.ground)L.push("    ground: "+q(s.ground)+",");
+    Object.keys(resolved).forEach(k=>{ if(resolved[k])L.push("    "+k+": "+q(resolved[k])+","); });
     L.push("  },");
   }
   L.push("  profile: {");
@@ -4749,7 +5248,19 @@ function vProfileSettings(){
   const goal=s.goal&&GOALS[s.goal]?GOALS[s.goal][0]:null;
   const act=s.activity&&ACTIVITY[s.activity]?ACTIVITY[s.activity][0]:null;
   const tone=s.tone&&TONES[s.tone]?TONES[s.tone][0]:null;
-  const body=`
+  // Simple way to finish a deferred data connection from Settings, not just
+  // from the banner it also appears on — same connectDataNow() either way.
+  const dataPending=!TOKEN||(SETUP&&SETUP.dataDeferred);
+  const connectRow=dataPending?`<div class="card tight" style="border-color:var(--gold);background:rgba(236,154,62,.09);margin-bottom:12px">
+      <div style="font-weight:600;font-size:13px">Your data isn't connected</div>
+      <div class="note" style="margin-top:3px">Connect your Airtable base to start saving real entries.</div>
+      <button class="btn sm p" style="margin-top:8px" onclick="connectDataNow()">Connect my data</button>
+    </div>`:"";
+  const body=`<div class="row" style="gap:10px;align-items:center;margin-bottom:12px">
+      <img src="${getCharacter('brandmark')}" alt="" class="charbadge">
+      <div class="note" style="margin:0">${esc(APP_NAME)}'s AbhinavOS character.</div>
+    </div>
+    ${connectRow}
     ${row("App name",s.appName)}
     ${row("Called",s.displayName)}
     ${row("Height",s.heightCm?s.heightCm+" cm":null)}
@@ -4830,18 +5341,29 @@ function R(){
   const d=new Date();
   // Offline / pending-sync strip. Only ever shown when it's actually true,
   // so it never becomes wallpaper the eye learns to skip.
+// Two different reasons the app can be running on demo/sample data, worded
+// differently: someone still exploring before they've set anything up
+// (exitDemo() sends them into the full wizard) vs. someone who already
+// completed onboarding and deliberately chose "I'll do this later" for the
+// data connection (connectDataNow() just opens that one remaining step,
+// without re-asking their name, photo, theme, or goal).
 const demoBar = DEMO
-    ? '<div class="card" style="border-color:var(--gold);background:rgba(236,154,62,.09);padding:10px 12px;margin-bottom:10px">'
-      +'<div style="font-weight:600;font-size:13px">Demo — sample data, nothing is saved</div>'
-      +'<div class="note" style="margin-top:3px">These figures are made up. Nothing here writes to Airtable.</div>'
-      +'<button class="btn sm p" style="margin-top:8px" onclick="exitDemo()">Set up my own</button></div>'
+    ? (SETUP&&SETUP.completed&&SETUP.dataDeferred
+      ? '<div class="card" style="border-color:var(--gold);background:rgba(236,154,62,.09);padding:10px 12px;margin-bottom:10px">'
+        +'<div style="font-weight:600;font-size:13px">Your data isn\'t connected yet</div>'
+        +'<div class="note" style="margin-top:3px">Showing sample entries for now — nothing you log here is saved.</div>'
+        +'<button class="btn sm p" style="margin-top:8px" onclick="connectDataNow()">Connect my data</button></div>'
+      : '<div class="card" style="border-color:var(--gold);background:rgba(236,154,62,.09);padding:10px 12px;margin-bottom:10px">'
+        +'<div style="font-weight:600;font-size:13px">Demo — sample data, nothing is saved</div>'
+        +'<div class="note" style="margin-top:3px">These figures are made up. Nothing here writes to Airtable.</div>'
+        +'<button class="btn sm p" style="margin-top:8px" onclick="exitDemo()">Set up my own</button></div>')
     : "";
   const offlineBar = (!navigator.onLine || WRITE_QUEUE.length)
     ? `<div class="offbar${navigator.onLine?" pending":""}">${navigator.onLine
         ? `${WRITE_QUEUE.length} change${WRITE_QUEUE.length===1?"":"s"} waiting to sync <button class="btn sm" style="margin-left:auto" onclick="flushQueue()">Sync now</button>`
         : `Offline — logging still works, saves sync automatically${WRITE_QUEUE.length?` (${WRITE_QUEUE.length} queued)`:""}`}</div>`
     : "";
-  const head=`<header><div><div class="brand">${FACE_IMG}${brandHTML()}</div>
+  const head=`<header><div><div class="brand">${faceImgHtml()}${brandHTML()}</div>
    <div class="date">${d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"})} · <span id="clock">${nowClock()}</span></div></div>
    ${state==="ready"&&SCORE.week?`<div class="lvl">This week<b>${SCORE.week.net} pts</b></div>`:
      `<div class="lvl" style="color:${SYNC==="error"?"var(--amber)":"var(--muted)"}">${SYNC==="working"?'<span class="spin"></span>':""}</div>`}</header>`;
@@ -4857,7 +5379,9 @@ const demoBar = DEMO
       <div class="bootbar"><div class="bootbar-fill"></div></div>
       <button class="btn sm" style="margin-top:20px;opacity:.55" onclick="loadAll()">Retry</button>
     </div>`;
-  else if(state==="error")body=`<div class="card"><div class="ttl" style="color:var(--amber)">Couldn't load</div>
+  else if(state==="error")body=`<div class="card" style="text-align:center">
+    <img src="${getCharacter('attention')}" alt="" style="width:96px;height:auto;margin:2px auto 12px;display:block">
+    <div class="ttl" style="color:var(--amber);justify-content:center">Couldn't load</div>
     <div class="note">${esc(lastError)}</div>
     <button class="btn p full" style="margin-top:10px" onclick="loadAll()">Retry</button>
     <button class="btn full" style="margin-top:8px" onclick="forgetToken()">Re-enter token</button></div>`;
@@ -4884,7 +5408,9 @@ if("serviceWorker" in navigator){
 }
 
 (async()=>{
-  await loadToken();await loadLearned();await loadVerified();await loadAutoLearned();
+  await loadToken();
+  try{ applyThemeLive(); }catch(e){} // now that SETUP is loaded, apply the person's own theme/colour choice
+  await loadLearned();await loadVerified();await loadAutoLearned();
   await loadGemKey();await loadGroqKey();await loadRouterKey();await loadAIPref();
   await loadProactiveSetting();await loadApiUsage();await loadApiPlanCap();
   await loadQueue();await loadReviewState();await loadPhotoThumbs();

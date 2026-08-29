@@ -58,11 +58,23 @@ window.ABOS_CONFIG = {
     // Put the file in the app/ folder (or app/assets/) and point at it.
     //   faceImage: "assets/my-avatar.png",
     // A data: URI also works if you'd rather not add a file.
+    //
+    // End users don't need this at all — the setup wizard has an "Add
+    // Photo" step that opens their device's normal photo picker, previews
+    // the result, and lets them change or remove it. Whatever they pick is
+    // saved in the browser and takes over from this value automatically, so
+    // it's still fine to leave faceImage set here as the shared default
+    // before anyone has chosen their own photo.
     faceImage: "",
 
     // YOUR larger character image, shown on the boot screen and in restart
     // mode. Recommended: portrait PNG with transparency, ~600px tall.
     // Defaults to the app icon if you leave it empty.
+    //
+    // If a user has picked a profile photo in the wizard, that same photo is
+    // used here too — there's only one "photo" concept end users see. Set
+    // charImage explicitly if you want the boot portrait to always differ
+    // from the small header photo, even for users who've chosen their own.
     charImage: "",
   },
 
@@ -71,6 +83,14 @@ window.ABOS_CONFIG = {
    *
    * Each key maps to one CSS custom property. Anything you omit keeps the
    * framework's default. Use any valid CSS colour.
+   *
+   * End users don't need any of this — the in-app setup wizard now offers a
+   * "Look & Feel" step with ready-made theme cards (Warm, Midnight, Soft,
+   * Calm, Energy, Minimal) plus two colour pickers, no hex codes required.
+   * Picking one there is saved as a theme identifier, not raw colours, and
+   * always wins over whatever is set here. The block below is still the
+   * right place for a developer who wants to hand-pick every token, or ship
+   * a fixed look nobody can change from the wizard.
    * ==================================================================== */
   theme: {
     // ground:    "#120D0A",  // page background

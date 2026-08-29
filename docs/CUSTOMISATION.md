@@ -172,18 +172,28 @@ limits of that request.
 
 Since v2 of the framework you do **not** need to edit `config.js` to
 personalise the app. On first run — no saved token, no completed setup — the
-app opens a five-step wizard instead of an Airtable token box:
+app opens a seven-step wizard instead of an Airtable token box:
 
 | Step | Collects |
 |---|---|
-| 1. Identity | Your name, what the app calls you, app name, tagline |
-| 2. Branding | Avatar/logo path, primary colour, background colour |
-| 3. About you | Height, age, sex, weight, activity level |
-| 4. Goals | Goal type, target weight, calorie floor, protein, water, training days, diet, foods to avoid, equipment, coaching tone |
-| 5. Data & AI | Your Airtable base ID, then a pointer to token and key setup |
+| 1. Welcome | Nothing yet — sets expectations, offers "just show me the app first" (demo mode) |
+| 2. Identity | Your name, what the app calls you, app name, tagline, and a profile photo (opens your device's normal photo picker; preview, change, and remove are all built in — no file paths or URLs shown) |
+| 3. Look & Feel | A theme, picked from visual preset cards (Warm, Midnight, Soft, Calm, Energy, Minimal) with a small "Customize" option for two colour pickers — no hex codes required, applies immediately |
+| 4. About you | Height, age, sex, weight, activity level |
+| 5. Goals | Goal type, target weight, calorie floor, protein, water, training days, diet, foods to avoid, equipment, coaching tone |
+| 6. Data Connection | Your Airtable base ID, explained plainly as the one technical step, then a pointer to token entry and auto-discovery |
+| 7. Ready | A summary of what you picked before you open the app |
 
-Only a name and an app name are required. Everything else has a documented
-default and is editable later.
+Only a name and an app name are required. Everything else — including the
+photo and theme — has a sensible default and is editable later, from
+Settings or by simply going through the wizard again.
+
+The photo you pick is resized and compressed in your browser before it's
+saved (well under the size a phone camera produces), and the theme you pick
+is stored as a short identifier like `midnight`, not raw colour values — the
+framework maps that identifier back to the same CSS custom properties a
+hand-written `theme:` block in `config.js` uses, so both paths produce
+identical results.
 
 ### Where the answers go
 
