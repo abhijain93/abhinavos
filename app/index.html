@@ -2707,9 +2707,9 @@ function vCoachWidget(){
   return `<div class="scrim" onclick="if(event.target===this){COACH_OPEN=false;R()}">
     <div class="sheet">
      <div class="grip"></div>
-     <div class="ttl"><img src="${getCharacter('brandmark')}" alt="" class="charbadge" style="width:22px;height:22px;margin-right:6px;vertical-align:-6px">Coach<span class="mono">${COACH_BUSY?'<span class="spin"></span>':"live"}</span></div>
+     <div class="ttl"><img src="${getCharacter('brandmark')}" alt="" class="charbadge" style="width:22px;height:22px;margin-right:6px;vertical-align:-6px" onerror="this.onerror=null;this.src='${CHAR_ASSETS.brandmark}'">Coach<span class="mono">${COACH_BUSY?'<span class="spin"></span>':"live"}</span></div>
      <div class="coachmsgs" id="coachmsgs">${msgs}${COACH_BUSY?`<div class="row" style="gap:8px;align-items:center;padding:8px 0 2px">
-       <img src="${getCharacter('thinking')}" alt="" class="char-context"><span class="note" style="margin:0">Thinking…</span></div>`:""}</div>
+       <img src="${getCharacter('thinking')}" alt="" class="char-context" onerror="this.onerror=null;this.src='${CHAR_ASSETS.thinking}'"><span class="note" style="margin:0">Thinking…</span></div>`:""}</div>
      <div class="row" style="gap:8px;margin-top:10px;align-items:flex-start">
       <textarea id="coachq" class="grow" placeholder="e.g. leg press is taken, what do I sub in?">${esc(window._coachq||"")}</textarea>
       <button class="btn mic ${recording&&micTarget==='coachq'?"rec":""}" onclick="toggleMic('coachq')" aria-label="Voice input">${recording&&micTarget==='coachq'?MIC_STOP_ICON:MIC_ICON}</button></div>
@@ -3654,7 +3654,7 @@ function vWizard(){
     // The visual comes first here, then the headline — the one screen where
     // the shared header-above-body layout below is deliberately not used.
     b=`<div style="text-align:center;padding:2px 0 4px">
-      <img src="${CHAR_URI}" alt="" class="wiz-hero-img">
+      <img src="${CHAR_URI}" alt="" class="wiz-hero-img" onerror="this.onerror=null;this.src='${CHAR_ASSETS.welcome}'">
       <div class="wiz-head serif" style="text-align:center;margin-top:16px">${esc(copy.head)}</div>
       <div class="note wiz-sub" style="text-align:center">${esc(copy.sub)}</div>
     </div>`;
@@ -3675,7 +3675,7 @@ function vWizard(){
           <button type="button" class="btn sm wiz-disclosure" style="margin-top:2px" onclick="toggleSection('wz_identity_custom')">Customize app name ›</button>`}
       <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
         <div class="row" style="gap:10px;align-items:center;margin-bottom:14px">
-          <img src="${getCharacter('welcome')}" alt="" class="char-guide">
+          <img src="${getCharacter('welcome')}" alt="" class="char-guide" onerror="this.onerror=null;this.src='${CHAR_ASSETS.welcome}'">
           <div class="note" style="margin:0">This is Abhinav — your guide around the app. Your own photo below is separate, and it's just for your profile.</div>
         </div>
         ${wizPhotoWidget()}
@@ -4057,7 +4057,7 @@ function vDiscoveryPanel(){
 
 function vSetup(){
   return `<div class="card" style="text-align:center">
-   <img src="${CHAR_URI}" alt="" style="width:150px;height:auto;margin:2px auto 14px;display:block;filter:drop-shadow(0 14px 30px rgba(0,0,0,.6))">
+   <img src="${CHAR_URI}" alt="" style="width:150px;height:auto;margin:2px auto 14px;display:block;filter:drop-shadow(0 14px 30px rgba(0,0,0,.6))" onerror="this.onerror=null;this.src='${CHAR_ASSETS.welcome}'">
    <div class="ttl">One-time setup</div>
    <div class="note" style="margin-bottom:12px">This connects straight to your Airtable base. You do this once.</div>
    <div class="note" style="color:var(--ink2);line-height:1.9;text-align:left">
@@ -4095,7 +4095,7 @@ function vToday(){
   if(rs && rs.active){
     const fresh = nextFreshStart();
     return `<div class="card hero" style="text-align:center;padding:26px 18px">
-      <img src="${CHAR_URI}" alt="" style="width:96px;height:auto;margin:0 auto 14px;display:block">
+      <img src="${CHAR_URI}" alt="" style="width:96px;height:auto;margin:0 auto 14px;display:block" onerror="this.onerror=null;this.src='${CHAR_ASSETS.welcome}'">
       <div class="serif" style="font-size:22px;margin-bottom:8px">Good to see you.</div>
       <div class="note" style="margin-bottom:18px">Nothing to catch up on. Nothing to make up for.
         Just one thing today —</div>
@@ -4213,7 +4213,7 @@ function vToday(){
         ? "Reward unlocked. Non-food only — a purchase, a tracking-free day, kit."
         : Math.round(REWARD_THRESHOLD_PCT*100-pct)+"% to the weekly reward"}</div>
      ${wk.unlocked?`<div class="row" style="gap:8px;align-items:center;margin-top:8px">
-       <img src="${getCharacter('celebrating')}" alt="" class="char-context"></div>`:""}
+       <img src="${getCharacter('celebrating')}" alt="" class="char-context" onerror="this.onerror=null;this.src='${CHAR_ASSETS.celebrating}'"></div>`:""}
      ${SCORE.today?`<div class="row sp" style="margin-top:9px;padding-top:9px;border-top:1px solid var(--line)">
        <span class="tiny">Today</span>
        <span class="mono tiny">+${SCORE.today.earned}${SCORE.today.lostCapped?" −"+SCORE.today.lostCapped:""} = ${SCORE.today.net}</span></div>`:""}
@@ -4326,7 +4326,7 @@ function vFood(){
      <span class="grow"><span class="nm">${esc(dv(f,SCHEMA.F.item)||"")}</span>
      <span class="mc">${Math.round(n(dv(f,SCHEMA.F.kcal)))} kcal · ${r1(n(dv(f,SCHEMA.F.p)))}P · ${r1(n(dv(f,SCHEMA.F.c)))}C · ${r1(n(dv(f,SCHEMA.F.f)))}F</span></span></div>`).join("")
     :`<div class="row" style="gap:10px;align-items:center">
-       <img src="${getCharacter('food')}" alt="" class="char-context">
+       <img src="${getCharacter('food')}" alt="" class="char-context" onerror="this.onerror=null;this.src='${CHAR_ASSETS.food}'">
        <div class="note" style="margin:0">Nothing logged yet today.</div>
       </div>`}</div>`;
 }
@@ -4339,7 +4339,7 @@ function gymTodaySummaryCard(){
     // isn't a gap to fill, it's the plan working as intended.
     if(GYMTODAY&&GYMTODAY.split==="Rest")return "";
     return `<div class="card tight"><div class="row" style="gap:10px;align-items:center">
-      <img src="${getCharacter('gym')}" alt="" class="char-context">
+      <img src="${getCharacter('gym')}" alt="" class="char-context" onerror="this.onerror=null;this.src='${CHAR_ASSETS.gym}'">
       <div class="note" style="margin:0">Nothing logged yet today.</div>
      </div></div>`;
   }
@@ -4445,7 +4445,7 @@ function vBody(){
 
   <div class="card"><div class="ttl">Sleep last night${SAVE_FLASH.sleep?'<span class="pill ok">Saved ✓</span>':''}</div>
    ${!val('f_total',D.sleep)?`<div class="row" style="gap:10px;align-items:center;margin-bottom:10px">
-     <img src="${getCharacter('sleep')}" alt="" class="char-context">
+     <img src="${getCharacter('sleep')}" alt="" class="char-context" onerror="this.onerror=null;this.src='${CHAR_ASSETS.sleep}'">
      <div class="note" style="margin:0">Not logged yet — how did last night go?</div>
     </div>`:""}
    <div class="row wrap" style="gap:9px">
@@ -5257,7 +5257,7 @@ function vProfileSettings(){
       <button class="btn sm p" style="margin-top:8px" onclick="connectDataNow()">Connect my data</button>
     </div>`:"";
   const body=`<div class="row" style="gap:10px;align-items:center;margin-bottom:12px">
-      <img src="${getCharacter('brandmark')}" alt="" class="charbadge">
+      <img src="${getCharacter('brandmark')}" alt="" class="charbadge" onerror="this.onerror=null;this.src='${CHAR_ASSETS.brandmark}'">
       <div class="note" style="margin:0">${esc(APP_NAME)}'s AbhinavOS character.</div>
     </div>
     ${connectRow}
@@ -5373,14 +5373,14 @@ const demoBar = DEMO
   else if(state==="needtoken")body=vSetup();
   else if(state==="loading"||state==="boot")body=`
     <div class="card" style="text-align:center;padding:34px 18px 26px;border:none;background:transparent;box-shadow:none">
-      <img class="bootflame" src="${CHAR_URI}" alt="" style="width:96px;height:auto">
+      <img class="bootflame" src="${CHAR_URI}" alt="" style="width:96px;height:auto" onerror="this.onerror=null;this.src='${CHAR_ASSETS.welcome}'">
       <div class="serif" style="font-size:21px;margin:16px 0 5px">Getting your day</div>
       <div class="note mono" style="font-size:11.5px;letter-spacing:.04em">${esc(LOAD_STEP||"Starting…")}</div>
       <div class="bootbar"><div class="bootbar-fill"></div></div>
       <button class="btn sm" style="margin-top:20px;opacity:.55" onclick="loadAll()">Retry</button>
     </div>`;
   else if(state==="error")body=`<div class="card" style="text-align:center">
-    <img src="${getCharacter('attention')}" alt="" style="width:96px;height:auto;margin:2px auto 12px;display:block">
+    <img src="${getCharacter('attention')}" alt="" style="width:96px;height:auto;margin:2px auto 12px;display:block" onerror="this.onerror=null;this.src='${CHAR_ASSETS.attention}'">
     <div class="ttl" style="color:var(--amber);justify-content:center">Couldn't load</div>
     <div class="note">${esc(lastError)}</div>
     <button class="btn p full" style="margin-top:10px" onclick="loadAll()">Retry</button>
